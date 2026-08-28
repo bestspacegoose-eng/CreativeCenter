@@ -62,6 +62,11 @@ function escapeHTML(value = "") {
     .replaceAll("'", "&#039;");
 }
 
+function conciseText(value, limit) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  return text.length > limit ? `${text.slice(0, Math.max(0, limit - 3)).trimEnd()}...` : text;
+}
+
 function localISO(date = new Date()) {
   const offset = date.getTimezoneOffset();
   return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 10);
@@ -431,7 +436,11 @@ function renderNotesList() {
     .filter((note) => `${note.title} ${note.body} ${note.tags.join(" ")}`.toLowerCase().includes(noteSearch.toLowerCase()))
     .sort((a, b) => b.updatedAt - a.updatedAt);
   document.querySelector("#notes-list").innerHTML = notes.length
-    ? notes.map((note) => `<button class="note-list-item ${note.id === state.activeNoteId ? "is-active" : ""}" type="button" data-note-id="${note.id}"><strong>${escapeHTML(note.title || "Untitled note")}</strong><span>${escapeHTML(note.body || "An empty page")}</span><small>${formatRelativeDate(note.updatedAt)}</small></button>`).join("")
+    ? notes.map((note) => {
+        const title = note.title || "Untitled note";
+        const body = note.body || "An empty page";
+        return `<button class="note-list-item ${note.id === state.activeNoteId ? "is-active" : ""}" type="button" data-note-id="${note.id}" aria-label="Open note: ${escapeHTML(title)}"><strong title="${escapeHTML(title)}">${escapeHTML(conciseText(title, 38))}</strong><span title="${escapeHTML(body)}">${escapeHTML(conciseText(body, 64))}</span><small>${formatRelativeDate(note.updatedAt)}</small></button>`;
+      }).join("")
     : `<div class="empty-state">No matching notes.</div>`;
 }
 
@@ -549,6 +558,13 @@ function ravelrySearchURL(term) {
   return `https://www.ravelry.com/patterns/search#craft=crochet&availability=free&query=${encodeURIComponent(term)}&sort=best&view=captioned_thumbs`;
 }
 
+function patternPreviewURL(pattern) {
+  const suppliedImage = safeURL(pattern.image);
+  if (suppliedImage) return suppliedImage;
+  const sourceURL = safeURL(pattern.url);
+  return sourceURL ? `https://s0.wp.com/mshots/v1/${encodeURIComponent(sourceURL)}?w=720&h=450` : "";
+}
+
 async function searchAllPatternSites(term) {
   crochetQuery = term.trim();
   crochetCategory = "all";
@@ -571,6 +587,7 @@ async function searchAllPatternSites(term) {
       categories: Array.isArray(item.categories) ? item.categories.map(String).slice(0, 6) : [],
       difficulty: String(item.difficulty || "Unrated").slice(0, 40),
       url: safeURL(item.url),
+      image: safeURL(item.image),
       description: String(item.description || "Free crochet pattern from the original website.").slice(0, 320),
     })).filter((item) => item.url);
     crochetSearchStatus = "live";
@@ -602,6 +619,7 @@ function renderCrochetStudio() {
     <div class="section-heading pattern-results-heading"><div><p class="card-kicker">Combined results</p><h2>${searchLabel}</h2></div><span class="results-note">${patterns.length} results · ${crochetSearchStatus === "live" ? "Live index" : crochetSearchStatus === "loading" ? "Checking live sources…" : "Curated starter index"}</span></div>
     <div class="source-filter-row" role="group" aria-label="Filter patterns by website"><button class="${crochetSourceFilter === "all" ? "is-active" : ""}" data-crochet-source="all" type="button">All websites</button>${crochetSources.map((source) => `<button class="${crochetSourceFilter === source.name ? "is-active" : ""}" data-crochet-source="${escapeHTML(source.name)}" type="button">${escapeHTML(source.name)}</button>`).join("")}</div>
     ${patterns.length ? `<div class="unified-pattern-grid">${patterns.map((pattern) => `<article class="pattern-result-card card">
+      <a class="pattern-preview" href="${escapeHTML(pattern.url)}" target="_blank" rel="noopener noreferrer" aria-label="Preview ${escapeHTML(pattern.title)} on ${escapeHTML(pattern.source)}"><img data-pattern-preview src="${escapeHTML(patternPreviewURL(pattern))}" alt="Website preview for ${escapeHTML(pattern.title)}" loading="lazy" /><span>${svgIcon("external")} Website preview</span></a>
       <div class="pattern-result-source"><span class="source-dot ${escapeHTML(pattern.source.toLowerCase().replaceAll(/[^a-z]/g, ""))}"></span>${escapeHTML(pattern.source)}<span class="free-pill">Free</span></div>
       <h3>${escapeHTML(pattern.title)}</h3><p class="pattern-designer">by ${escapeHTML(pattern.designer || "Independent designer")}</p><p>${escapeHTML(pattern.description || "Free crochet pattern from the original source website.")}</p>
       <div class="tag-row">${(pattern.categories || []).slice(0, 3).map((category) => `<span class="tag">${escapeHTML(category)}</span>`).join("")}<span class="tag">${escapeHTML(pattern.difficulty || "Unrated")}</span></div>
@@ -623,6 +641,10 @@ function renderHobbyStudio() {
   renderHobbyTabs();
   content.innerHTML = state.activeHobby === "writing" ? renderWritingStudio() : state.activeHobby === "crochet" ? renderCrochetStudio() : renderArtStudio();
   hydrateIcons(content);
+  content.querySelectorAll("[data-pattern-preview]").forEach((image) => image.addEventListener("error", () => {
+    image.closest(".pattern-preview")?.classList.add("is-unavailable");
+    image.remove();
+  }, { once: true }));
 }
 
 function openHobbySettings() {
@@ -875,7 +897,7 @@ function saveCrochetSearch() {
 function saveCrochetPattern(pattern) {
   if (!pattern || !pattern.url) return;
   if (!state.inspirations.some((item) => item.sourceUrl === pattern.url)) {
-    state.inspirations.unshift({ id: crypto.randomUUID(), title: pattern.title, category: "Ideas", tags: ["crochet", ...(pattern.categories || []).slice(0, 2), "free pattern"], note: `${pattern.description}\nDesigner: ${pattern.designer}`, image: "", source: pattern.source, sourceUrl: pattern.url, ratio: "4 / 5", saved: true });
+    state.inspirations.unshift({ id: crypto.randomUUID(), title: pattern.title, category: "Ideas", tags: ["crochet", ...(pattern.categories || []).slice(0, 2), "free pattern"], note: `${pattern.description}\nDesigner: ${pattern.designer}`, image: patternPreviewURL(pattern), source: pattern.source, sourceUrl: pattern.url, ratio: "16 / 10", saved: true });
     persist();
     renderInspirations();
     renderTodayInspiration();

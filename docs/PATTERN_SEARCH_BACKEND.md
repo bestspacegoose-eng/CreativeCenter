@@ -34,6 +34,8 @@ Return:
 
 The current frontend discards malformed entries and escapes displayed text. The server should still validate that `url` is an HTTPS URL on an allowed provider domain.
 
+An optional `image` field may contain an approved HTTPS pattern thumbnail. When it is absent, the GitHub Pages prototype requests a current website-preview image through WordPress.com's MShots service and links that preview back to the original pattern page. For production, prefer provider-supplied thumbnails, document the external image service in the privacy notice, and confirm that each provider permits the intended image use.
+
 ## Aggregator flow
 
 1. Validate and cap `q` (for example, 100 characters); accept only known categories and sources.
@@ -63,4 +65,3 @@ Do not put provider secrets in that file. Store them as serverless secrets. If y
 2. Add Ravelry through its approved developer access.
 3. Add one compliant domain-search/index integration for the remaining sites.
 4. Add monitoring for broken links, paid-status changes, duplicates, and providers that change their terms.
-
