@@ -3099,6 +3099,218 @@ a svg {
   to { opacity: 0; transform: translateY(5px); }
 }
 
+/* Palette contrast system -------------------------------------------------- */
+
+body {
+  background:
+    radial-gradient(circle at 82% 8%, color-mix(in srgb, var(--blue-soft) 62%, transparent) 0, transparent 27rem),
+    radial-gradient(circle at 20% 92%, color-mix(in srgb, var(--violet-soft) 54%, transparent) 0, transparent 31rem),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+.sidebar {
+  border-right-color: var(--line-strong);
+  background: color-mix(in srgb, var(--surface) 76%, var(--secondary-soft));
+}
+
+.topbar {
+  border-bottom-color: var(--line-strong);
+  background: color-mix(in srgb, var(--bg) 80%, var(--blue-soft));
+}
+
+.search-box,
+.theme-trigger,
+.icon-button {
+  border-color: color-mix(in srgb, var(--blue) 30%, var(--line));
+  box-shadow: 0 4px 15px color-mix(in srgb, var(--blue) 8%, transparent);
+}
+
+.nav-item[data-view="today"].is-active {
+  background: var(--gold-soft);
+  color: var(--gold-dark);
+}
+
+.nav-item[data-view="planner"].is-active {
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+}
+
+.nav-item[data-view="hobbies"].is-active {
+  background: var(--violet-soft);
+  color: var(--violet-dark);
+}
+
+.nav-item[data-view="inspiration"].is-active {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}
+
+.nav-item[data-view="notes"].is-active {
+  background: var(--secondary-soft);
+  color: var(--secondary);
+}
+
+.tiny-ritual {
+  border-color: color-mix(in srgb, var(--gold) 34%, var(--line));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--gold-soft) 72%, var(--surface)), var(--surface));
+}
+
+.card {
+  border-color: color-mix(in srgb, var(--blue) 18%, var(--line-strong));
+}
+
+.focus-card {
+  background:
+    radial-gradient(circle at 92% 12%, color-mix(in srgb, var(--accent-soft) 90%, transparent), transparent 31%),
+    linear-gradient(115deg, color-mix(in srgb, var(--gold-soft) 45%, var(--surface)), var(--surface) 48%);
+}
+
+.schedule-card {
+  background: linear-gradient(150deg, color-mix(in srgb, var(--blue-soft) 46%, var(--surface)), var(--surface) 45%);
+}
+
+.creative-brief {
+  border-color: color-mix(in srgb, var(--secondary) 32%, var(--line));
+  background: linear-gradient(150deg, color-mix(in srgb, var(--secondary-soft) 88%, var(--surface)), color-mix(in srgb, var(--gold-soft) 35%, var(--surface)) 72%);
+}
+
+.spark-card {
+  border-color: color-mix(in srgb, var(--violet) 35%, var(--line));
+  background: linear-gradient(145deg, color-mix(in srgb, var(--violet-soft) 56%, var(--surface)), var(--surface) 60%);
+}
+
+.quick-note {
+  border-color: color-mix(in srgb, var(--gold) 34%, var(--line));
+  background: linear-gradient(145deg, color-mix(in srgb, var(--gold-soft) 60%, var(--surface)), var(--surface) 64%);
+}
+
+.week-strip {
+  border-color: color-mix(in srgb, var(--blue) 30%, var(--line));
+  background: color-mix(in srgb, var(--blue-soft) 36%, var(--surface));
+}
+
+.week-day.is-selected {
+  background: var(--blue-dark);
+  color: var(--surface-strong);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--blue) 23%, transparent);
+}
+
+.week-day.is-selected i { background: var(--gold-soft); }
+
+.planner-day {
+  background: linear-gradient(155deg, color-mix(in srgb, var(--blue-soft) 48%, var(--surface)), var(--surface) 42%);
+}
+
+.planner-event:nth-child(3n + 1) { background: color-mix(in srgb, var(--accent-soft) 43%, var(--surface)); }
+.planner-event:nth-child(3n + 2) { background: color-mix(in srgb, var(--blue-soft) 56%, var(--surface)); }
+.planner-event:nth-child(3n) { background: color-mix(in srgb, var(--violet-soft) 52%, var(--surface)); }
+
+.calendar-connect-card {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
+  background: linear-gradient(150deg, color-mix(in srgb, var(--accent-soft) 54%, var(--surface)), var(--surface) 65%);
+}
+
+.week-note {
+  border-color: color-mix(in srgb, var(--violet) 30%, var(--line));
+  background: color-mix(in srgb, var(--violet-soft) 42%, var(--surface));
+}
+
+.source-bar {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
+  background: linear-gradient(100deg, color-mix(in srgb, var(--accent-soft) 50%, var(--surface)), color-mix(in srgb, var(--violet-soft) 45%, var(--surface)));
+}
+
+.inspiration-card:nth-child(4n + 1) { border-color: color-mix(in srgb, var(--accent) 36%, var(--line)); }
+.inspiration-card:nth-child(4n + 2) { border-color: color-mix(in srgb, var(--blue) 38%, var(--line)); }
+.inspiration-card:nth-child(4n + 3) { border-color: color-mix(in srgb, var(--violet) 38%, var(--line)); }
+.inspiration-card:nth-child(4n) { border-color: color-mix(in srgb, var(--gold) 38%, var(--line)); }
+
+.tag-row .tag:nth-child(4n + 1) { background: var(--accent-soft); color: var(--accent-dark); }
+.tag-row .tag:nth-child(4n + 2) { background: var(--blue-soft); color: var(--blue-dark); }
+.tag-row .tag:nth-child(4n + 3) { background: var(--violet-soft); color: var(--violet-dark); }
+.tag-row .tag:nth-child(4n) { background: var(--gold-soft); color: var(--gold-dark); }
+
+.art-banner {
+  border-color: color-mix(in srgb, var(--accent) 43%, var(--line));
+  background: linear-gradient(125deg, color-mix(in srgb, var(--accent-soft) 88%, var(--surface)), color-mix(in srgb, var(--gold-soft) 58%, var(--surface)));
+}
+
+.writing-banner {
+  border-color: color-mix(in srgb, var(--secondary) 43%, var(--line));
+  background: linear-gradient(125deg, color-mix(in srgb, var(--secondary-soft) 88%, var(--surface)), color-mix(in srgb, var(--blue-soft) 58%, var(--surface)));
+}
+
+.crochet-banner {
+  border-color: color-mix(in srgb, var(--violet) 48%, var(--line));
+  background: linear-gradient(125deg, color-mix(in srgb, var(--violet-soft) 88%, var(--surface)), color-mix(in srgb, var(--accent-soft) 48%, var(--surface)));
+}
+
+.daily-prompt-card {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
+  background: linear-gradient(150deg, color-mix(in srgb, var(--accent-soft) 46%, var(--surface)), var(--surface) 60%);
+}
+
+.practice-sites {
+  border-color: color-mix(in srgb, var(--blue) 35%, var(--line));
+  background: linear-gradient(150deg, color-mix(in srgb, var(--blue-soft) 58%, var(--surface)), var(--surface) 62%);
+}
+
+.writing-prompt-card:nth-child(4n + 1) { border-top: 4px solid var(--accent); background: color-mix(in srgb, var(--accent-soft) 26%, var(--surface)); }
+.writing-prompt-card:nth-child(4n + 2) { border-top: 4px solid var(--blue); background: color-mix(in srgb, var(--blue-soft) 34%, var(--surface)); }
+.writing-prompt-card:nth-child(4n + 3) { border-top: 4px solid var(--violet); background: color-mix(in srgb, var(--violet-soft) 32%, var(--surface)); }
+.writing-prompt-card:nth-child(4n) { border-top: 4px solid var(--gold); background: color-mix(in srgb, var(--gold-soft) 34%, var(--surface)); }
+
+.crochet-search-card {
+  border-color: color-mix(in srgb, var(--violet) 40%, var(--line));
+  background: linear-gradient(150deg, color-mix(in srgb, var(--violet-soft) 48%, var(--surface)), var(--surface) 58%);
+}
+
+.pattern-result-card:has(.source-dot.ravelry) { border-color: color-mix(in srgb, #e57585 44%, var(--line)); }
+.pattern-result-card:has(.source-dot.yarnspirations) { border-color: color-mix(in srgb, #6a9e95 48%, var(--line)); }
+.pattern-result-card:has(.source-dot.lovecrafts) { border-color: color-mix(in srgb, #8c76b0 46%, var(--line)); }
+.pattern-result-card:has(.source-dot.allfreecrochet) { border-color: color-mix(in srgb, #d59b55 48%, var(--line)); }
+
+.notes-workspace {
+  border-color: color-mix(in srgb, var(--secondary) 33%, var(--line));
+  background: linear-gradient(110deg, color-mix(in srgb, var(--secondary-soft) 34%, var(--surface)) 0 31%, var(--surface) 31%);
+}
+
+.notes-sidebar {
+  border-right-color: color-mix(in srgb, var(--secondary) 32%, var(--line));
+  background: color-mix(in srgb, var(--secondary-soft) 46%, var(--surface-tint));
+}
+
+.note-list-item.is-active {
+  border-left: 4px solid var(--secondary);
+  background: var(--surface-strong);
+}
+
+.note-tags-input { color: var(--violet-dark); }
+
+.primary-button {
+  border-color: var(--accent-dark);
+  background: var(--accent-dark);
+  box-shadow: 0 8px 21px color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
+html[data-theme="nightfall"] .primary-button {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #251f1c;
+}
+
+html[data-theme="nightfall"] .primary-button:hover {
+  border-color: var(--accent-dark);
+  background: var(--accent-dark);
+  color: #251f1c;
+}
+
+.secondary-button {
+  border-color: color-mix(in srgb, var(--blue) 34%, var(--line));
+  background: color-mix(in srgb, var(--blue-soft) 24%, var(--surface));
+}
+
 .mobile-nav {
   display: none;
 }
