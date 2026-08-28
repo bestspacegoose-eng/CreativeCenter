@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Daylily is a calm, local-first creative planner for schedules, inspiration, and notes."
+    />
+    <meta name="theme-color" content="#f4f0e8" />
+    <title>Daylily — Creative planning, gently organized</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+        <a class="brand" href="#today" aria-label="Daylily home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 34 34" role="img">
+              <path d="M17 4.5c2.2 4.2 6.1 4.8 10.2 3.4-1.2 4.5.7 7.9 4.3 10.2-4.5 1.3-6.1 5-5.8 9.4-3.8-2.7-7.5-1.5-10.7 1.7-.2-4.7-3.3-7-7.6-7.7 3.5-3.1 3.3-7.1 1.1-10.9 4.5.9 7.6-1.5 8.5-6.1Z" />
+              <circle cx="17.8" cy="17.2" r="4.6" />
+            </svg>
+          </span>
+          <span>daylily</span>
+        </a>
+
+        <nav class="primary-nav">
+          <p class="nav-label">Workspace</p>
+          <button class="nav-item is-active" data-view="today" type="button">
+            <span class="nav-icon" data-icon="sun"></span>
+            <span>Today</span>
+            <span class="nav-dot" aria-hidden="true"></span>
+          </button>
+          <button class="nav-item" data-view="planner" type="button">
+            <span class="nav-icon" data-icon="calendar"></span>
+            <span>Planner</span>
+          </button>
+          <button class="nav-item" data-view="inspiration" type="button">
+            <span class="nav-icon" data-icon="sparkles"></span>
+            <span>Inspiration</span>
+            <span class="nav-count" id="inspiration-count">6</span>
+          </button>
+          <button class="nav-item" data-view="notes" type="button">
+            <span class="nav-icon" data-icon="notebook"></span>
+            <span>Notes</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <div class="tiny-ritual">
+            <span class="ritual-orbit"><span></span></span>
+            <div>
+              <strong>Daily rhythm</strong>
+              <small><span id="ritual-progress">3</span> of 5 moments planned</small>
+            </div>
+          </div>
+          <button class="nav-item" id="open-integrations" type="button">
+            <span class="nav-icon" data-icon="link"></span>
+            <span>Integrations</span>
+          </button>
+          <button class="profile-button" id="open-account" type="button" aria-label="Open account settings">
+            <span class="avatar" id="profile-avatar">JR</span>
+            <span class="profile-copy">
+              <strong id="profile-name">Jodie Rivera</strong>
+              <small id="profile-plan">Local workspace</small>
+            </span>
+            <span class="nav-icon" data-icon="chevron-right"></span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="main" id="main-content">
+        <header class="topbar">
+          <button class="icon-button menu-button" id="menu-button" type="button" aria-label="Open menu">
+            <span data-icon="menu"></span>
+          </button>
+          <label class="search-box">
+            <span data-icon="search"></span>
+            <span class="sr-only">Search your workspace</span>
+            <input id="global-search" type="search" placeholder="Search your creative world…" />
+            <kbd>⌘ K</kbd>
+          </label>
+          <div class="topbar-actions">
+            <button class="theme-trigger" id="theme-trigger" type="button">
+              <span class="theme-swatch" aria-hidden="true"></span>
+              <span>Palette</span>
+            </button>
+            <button class="icon-button" id="notification-button" type="button" aria-label="Notifications">
+              <span data-icon="bell"></span>
+              <span class="notification-dot" aria-hidden="true"></span>
+            </button>
+            <button class="primary-button top-add-button" data-open-event type="button">
+              <span data-icon="plus"></span>
+              <span>New moment</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="view-wrap">
+          <section class="view is-active" id="view-today" data-view-panel="today">
+            <div class="page-intro today-intro">
+              <div>
+                <p class="eyebrow" id="today-date">Friday, August 28</p>
+                <h1>Make space for <em>what matters.</em></h1>
+                <p class="intro-copy">A gentle view of your day, with room for the ideas that find you.</p>
+              </div>
+              <div class="day-progress" aria-label="Daily progress">
+                <div class="progress-ring" id="progress-ring"><span id="progress-number">60%</span></div>
+                <div><strong>Your day is taking shape</strong><span id="progress-caption">3 of 5 moments planned</span></div>
+              </div>
+            </div>
+
+            <div class="today-grid">
+              <div class="today-primary">
+                <article class="focus-card card">
+                  <div class="focus-flower" aria-hidden="true">✦</div>
+                  <div class="focus-copy">
+                    <p class="card-kicker">Today’s intention</p>
+                    <input id="focus-input" value="Create with curiosity, not pressure." aria-label="Today's intention" />
+                    <p>Keep one thought close while the rest of the day moves around it.</p>
+                  </div>
+                  <button class="icon-button subtle" id="edit-focus" type="button" aria-label="Edit intention"><span data-icon="edit"></span></button>
+                </article>
+
+                <section class="schedule-card card">
+                  <div class="section-heading">
+                    <div>
+                      <p class="card-kicker">Daily flow</p>
+                      <h2>Your moments</h2>
+                    </div>
+                    <button class="text-button" data-open-event type="button"><span data-icon="plus"></span>Add moment</button>
+                  </div>
+                  <div class="schedule-list" id="today-schedule"></div>
+                </section>
+              </div>
+
+              <aside class="today-secondary">
+                <article class="creative-brief card">
+                  <div class="brief-top">
+                    <span class="brief-icon" data-icon="sparkles"></span>
+                    <span>Creative weather</span>
+                    <span class="status-pill">Open</span>
+                  </div>
+                  <blockquote>“Follow the texture that makes you pause.”</blockquote>
+                  <div class="mood-row">
+                    <span>Today feels</span>
+                    <div class="mood-options" role="group" aria-label="Choose today's mood">
+                      <button type="button" data-mood="quiet" aria-label="Quiet">◌</button>
+                      <button class="is-selected" type="button" data-mood="bright" aria-label="Bright">✦</button>
+                      <button type="button" data-mood="flowing" aria-label="Flowing">≈</button>
+                      <button type="button" data-mood="bold" aria-label="Bold">●</button>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="spark-card card">
+                  <div class="section-heading compact">
+                    <div>
+                      <p class="card-kicker">Pulled from your library</p>
+                      <h2>A little spark</h2>
+                    </div>
+                    <button class="icon-button subtle" data-view-link="inspiration" type="button" aria-label="Open inspiration library"><span data-icon="arrow-up-right"></span></button>
+                  </div>
+                  <div id="today-inspiration"></div>
+                </article>
+
+                <article class="quick-note card">
+                  <div class="quick-note-title"><span data-icon="feather"></span><strong>Catch a thought</strong></div>
+                  <textarea id="quick-note-input" rows="3" placeholder="Before it floats away…"></textarea>
+                  <button class="text-button" id="save-quick-note" type="button">Save to notes <span data-icon="arrow-right"></span></button>
+                </article>
+              </aside>
+            </div>
+          </section>
+
+          <section class="view" id="view-planner" data-view-panel="planner">
+            <div class="page-intro page-intro-row">
+              <div>
+                <p class="eyebrow">Shape your time</p>
+                <h1>The <em>weekly rhythm.</em></h1>
+                <p class="intro-copy">Move through the week one intentional moment at a time.</p>
+              </div>
+              <button class="primary-button" data-open-event type="button"><span data-icon="plus"></span>New moment</button>
+            </div>
+
+            <div class="week-strip card" id="week-strip"></div>
+            <div class="planner-grid">
+              <section class="planner-day card">
+                <div class="section-heading">
+                  <div>
+                    <p class="card-kicker" id="planner-date-label">Selected day</p>
+                    <h2 id="planner-day-title">Today’s flow</h2>
+                  </div>
+                  <div class="segmented-control" aria-label="Planner layout">
+                    <button class="is-active" type="button">Day</button>
+                    <button type="button">List</button>
+                  </div>
+                </div>
+                <div id="planner-schedule" class="planner-schedule"></div>
+              </section>
+
+              <aside class="planner-sidebar">
+                <article class="calendar-connect-card card">
+                  <span class="card-art" data-icon="calendar-heart"></span>
+                  <p class="card-kicker">Calendar friendly</p>
+                  <h3>Take your plans with you</h3>
+                  <p>Every moment can open in Google Calendar or download for Apple Calendar.</p>
+                  <button class="secondary-button full-width" id="calendar-help" type="button">How calendar export works</button>
+                </article>
+                <article class="week-note card">
+                  <div class="quick-note-title"><span data-icon="feather"></span><strong>Week note</strong></div>
+                  <textarea id="week-note-input" rows="7" placeholder="What do you want this week to hold?"></textarea>
+                  <small>Saved quietly in this browser</small>
+                </article>
+              </aside>
+            </div>
+          </section>
+
+          <section class="view" id="view-inspiration" data-view-panel="inspiration">
+            <div class="page-intro page-intro-row inspiration-intro">
+              <div>
+                <p class="eyebrow">Your visual garden</p>
+                <h1>Gather what <em>moves you.</em></h1>
+                <p class="intro-copy">Collect references, connect ideas, and remember why you saved them.</p>
+              </div>
+              <div class="intro-actions">
+                <button class="secondary-button" id="connect-pinterest" type="button"><span data-icon="pinterest"></span>Connect Pinterest</button>
+                <button class="primary-button" data-open-inspiration type="button"><span data-icon="plus"></span>Add inspiration</button>
+              </div>
+            </div>
+
+            <div class="source-bar card">
+              <div class="source-copy">
+                <span class="source-icon pinterest-icon" data-icon="pinterest"></span>
+                <div><strong>Bring your boards closer</strong><small>Connect Pinterest to import pins into a project library.</small></div>
+              </div>
+              <button class="text-button" id="source-connect-pinterest" type="button">Set up connection <span data-icon="arrow-right"></span></button>
+            </div>
+
+            <div class="library-toolbar">
+              <div class="filter-chips" id="inspiration-filters">
+                <button class="is-active" data-filter="all" type="button">Everything</button>
+                <button data-filter="Brand" type="button">Brand</button>
+                <button data-filter="Spaces" type="button">Spaces</button>
+                <button data-filter="Palette" type="button">Palette</button>
+                <button data-filter="Ideas" type="button">Ideas</button>
+              </div>
+              <button class="icon-button" id="inspiration-layout" type="button" aria-label="Toggle layout"><span data-icon="grid"></span></button>
+            </div>
+            <div class="inspiration-grid" id="inspiration-grid"></div>
+          </section>
+
+          <section class="view" id="view-notes" data-view-panel="notes">
+            <div class="page-intro page-intro-row notes-intro">
+              <div>
+                <p class="eyebrow">A place for the words</p>
+                <h1>Notes, threads &amp; <em>tiny ideas.</em></h1>
+                <p class="intro-copy">Write loosely now. Organize only when it helps.</p>
+              </div>
+              <button class="primary-button" id="new-note" type="button"><span data-icon="plus"></span>New note</button>
+            </div>
+
+            <div class="notes-workspace card">
+              <aside class="notes-sidebar">
+                <label class="notes-search"><span data-icon="search"></span><input id="notes-search-input" type="search" placeholder="Find a note…" /></label>
+                <div class="notes-list" id="notes-list"></div>
+              </aside>
+              <article class="note-editor">
+                <div class="editor-toolbar">
+                  <span class="save-state"><span></span>Saved locally</span>
+                  <button class="icon-button subtle" id="delete-note" type="button" aria-label="Delete note"><span data-icon="trash"></span></button>
+                </div>
+                <input id="note-title" class="note-title-input" aria-label="Note title" placeholder="Untitled note" />
+                <input id="note-tags" class="note-tags-input" aria-label="Note tags" placeholder="Add tags, separated by commas" />
+                <textarea id="note-body" class="note-body-input" aria-label="Note body" placeholder="Start with a feeling, a fragment, or a question…"></textarea>
+              </article>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+      <button class="is-active" data-view="today" type="button"><span data-icon="sun"></span><small>Today</small></button>
+      <button data-view="planner" type="button"><span data-icon="calendar"></span><small>Planner</small></button>
+      <button class="mobile-add" data-open-event type="button" aria-label="Add a moment"><span data-icon="plus"></span></button>
+      <button data-view="inspiration" type="button"><span data-icon="sparkles"></span><small>Inspire</small></button>
+      <button data-view="notes" type="button"><span data-icon="notebook"></span><small>Notes</small></button>
+    </nav>
+
+    <aside class="theme-drawer" id="theme-drawer" aria-hidden="true" aria-label="Theme palette">
+      <div class="drawer-heading">
+        <div><p class="card-kicker">Make it yours</p><h2>Palette studio</h2></div>
+        <button class="icon-button subtle" id="close-theme" type="button" aria-label="Close palette studio"><span data-icon="x"></span></button>
+      </div>
+      <p class="drawer-intro">Choose an atmosphere for your whole workspace. Your choice stays in this browser.</p>
+      <div class="theme-options" id="theme-options">
+        <button class="theme-option is-active" data-theme-option="linen" type="button"><span class="palette-dots"><i></i><i></i><i></i><i></i></span><span><strong>Wildflower Linen</strong><small>Warm &amp; grounded</small></span><span class="theme-check">✓</span></button>
+        <button class="theme-option" data-theme-option="coastal" type="button"><span class="palette-dots"><i></i><i></i><i></i><i></i></span><span><strong>Coastal Air</strong><small>Clear &amp; expansive</small></span><span class="theme-check">✓</span></button>
+        <button class="theme-option" data-theme-option="matcha" type="button"><span class="palette-dots"><i></i><i></i><i></i><i></i></span><span><strong>Matcha Studio</strong><small>Soft &amp; focused</small></span><span class="theme-check">✓</span></button>
+        <button class="theme-option" data-theme-option="lilac" type="button"><span class="palette-dots"><i></i><i></i><i></i><i></i></span><span><strong>Lavender Haze</strong><small>Dreamy &amp; playful</small></span><span class="theme-check">✓</span></button>
+        <button class="theme-option" data-theme-option="terracotta" type="button"><span class="palette-dots"><i></i><i></i><i></i><i></i></span><span><strong>Clay &amp; Poppy</strong><small>Earthy &amp; expressive</small></span><span class="theme-check">✓</span></button>
+        <button class="theme-option" data-theme-option="nightfall" type="button"><span class="palette-dots"><i></i><i></i><i></i><i></i></span><span><strong>Night Garden</strong><small>Deep &amp; immersive</small></span><span class="theme-check">✓</span></button>
+      </div>
+      <div class="theme-customizer">
+        <div><strong>Custom accent</strong><small>Fine-tune the details</small></div>
+        <input id="custom-accent" type="color" value="#d98262" aria-label="Choose custom accent color" />
+      </div>
+      <label class="density-control"><span><strong>Cozy spacing</strong><small>Give ideas a little more air</small></span><input id="cozy-density" type="checkbox" checked /><i></i></label>
+    </aside>
+    <div class="drawer-scrim" id="drawer-scrim"></div>
+
+    <dialog class="modal" id="event-modal">
+      <form class="modal-card" id="event-form" method="dialog">
+        <div class="modal-heading">
+          <div><p class="card-kicker">Plan a little space</p><h2>New moment</h2></div>
+          <button class="icon-button subtle" data-close-modal type="button" aria-label="Close"><span data-icon="x"></span></button>
+        </div>
+        <label class="field"><span>What are you making room for?</span><input id="event-title" name="title" required placeholder="Morning sketch session" /></label>
+        <div class="field-row">
+          <label class="field"><span>Date</span><input id="event-date" name="date" type="date" required /></label>
+          <label class="field"><span>Start time</span><input id="event-time" name="time" type="time" required /></label>
+          <label class="field"><span>Duration</span><select id="event-duration" name="duration"><option value="30">30 min</option><option value="45">45 min</option><option value="60" selected>1 hour</option><option value="90">1.5 hours</option><option value="120">2 hours</option></select></label>
+        </div>
+        <label class="field"><span>Notes</span><textarea id="event-notes" name="notes" rows="3" placeholder="Anything you want future-you to know…"></textarea></label>
+        <fieldset class="color-field"><legend>Color</legend><label><input type="radio" name="color" value="coral" checked /><span class="coral"></span></label><label><input type="radio" name="color" value="sage" /><span class="sage"></span></label><label><input type="radio" name="color" value="blue" /><span class="blue"></span></label><label><input type="radio" name="color" value="violet" /><span class="violet"></span></label></fieldset>
+        <div class="modal-actions"><button class="secondary-button" data-close-modal type="button">Cancel</button><button class="primary-button" type="submit">Create moment</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="inspiration-modal">
+      <form class="modal-card" id="inspiration-form" method="dialog">
+        <div class="modal-heading">
+          <div><p class="card-kicker">Add to your garden</p><h2>New inspiration</h2></div>
+          <button class="icon-button subtle" data-close-modal type="button" aria-label="Close"><span data-icon="x"></span></button>
+        </div>
+        <label class="field"><span>Title</span><input id="inspiration-title" name="title" required placeholder="A color story to remember" /></label>
+        <label class="field"><span>Source link <small>(Pinterest and web links welcome)</small></span><input id="inspiration-url" name="url" type="url" placeholder="https://…" /></label>
+        <label class="field"><span>Image link <small>(optional)</small></span><input id="inspiration-image" name="image" type="url" placeholder="https://…/image.jpg" /></label>
+        <div class="field-row two">
+          <label class="field"><span>Collection</span><select id="inspiration-category" name="category"><option>Ideas</option><option>Brand</option><option>Spaces</option><option>Palette</option></select></label>
+          <label class="field"><span>Tags</span><input id="inspiration-tags" name="tags" placeholder="texture, warm, editorial" /></label>
+        </div>
+        <label class="field"><span>Why did it catch you?</span><textarea id="inspiration-note" name="note" rows="3" placeholder="The contrast feels quiet but confident…"></textarea></label>
+        <div class="modal-actions"><button class="secondary-button" data-close-modal type="button">Cancel</button><button class="primary-button" type="submit">Save inspiration</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="integrations-modal">
+      <div class="modal-card integrations-card">
+        <div class="modal-heading">
+          <div><p class="card-kicker">Connected creativity</p><h2>Integrations</h2></div>
+          <button class="icon-button subtle" data-close-modal type="button" aria-label="Close"><span data-icon="x"></span></button>
+        </div>
+        <p class="modal-intro">Calendar export works now. Secure account sync and Pinterest importing are ready for a small backend service.</p>
+        <div class="integration-list">
+          <article class="integration-item">
+            <span class="integration-logo pinterest-icon" data-icon="pinterest"></span>
+            <div><strong>Pinterest</strong><p>Import boards and pins into your inspiration library.</p><small class="integration-status">Backend setup needed</small></div>
+            <button class="secondary-button" id="preview-pinterest" type="button">Preview</button>
+          </article>
+          <article class="integration-item">
+            <span class="integration-logo google-icon">G</span>
+            <div><strong>Google Calendar</strong><p>Open any Daylily moment as a pre-filled event.</p><small class="integration-status is-ready">Ready to use</small></div>
+            <button class="secondary-button" id="try-google-calendar" type="button">Try it</button>
+          </article>
+          <article class="integration-item">
+            <span class="integration-logo apple-icon">●</span>
+            <div><strong>Apple Calendar</strong><p>Download a standard calendar file for any moment.</p><small class="integration-status is-ready">Ready to use</small></div>
+            <button class="secondary-button" id="try-apple-calendar" type="button">Try it</button>
+          </article>
+        </div>
+        <div class="prototype-note"><span data-icon="info"></span><p><strong>Why Pinterest needs more setup</strong><br />GitHub Pages can host this interface, but it cannot safely keep OAuth secrets. The included project guide maps the production setup using managed authentication and a serverless function.</p></div>
+      </div>
+    </dialog>
+
+    <dialog class="modal" id="account-modal">
+      <form class="modal-card account-card" id="account-form" method="dialog">
+        <div class="modal-heading">
+          <div><p class="card-kicker">Your little corner</p><h2>Workspace profile</h2></div>
+          <button class="icon-button subtle" data-close-modal type="button" aria-label="Close"><span data-icon="x"></span></button>
+        </div>
+        <div class="account-avatar-row"><span class="avatar large" id="account-avatar">JR</span><div><strong>Local-first prototype</strong><p>Your planner is private to this browser until cloud accounts are configured.</p></div></div>
+        <label class="field"><span>Your name</span><input id="account-name" name="name" required /></label>
+        <label class="field"><span>Email for future sync</span><input id="account-email" name="email" type="email" placeholder="you@example.com" /></label>
+        <div class="prototype-note"><span data-icon="shield"></span><p><strong>Secure account path</strong><br />Use Supabase or Firebase Auth for email verification and cloud sync. Daylily never pretends a browser-only profile is a verified account.</p></div>
+        <div class="modal-actions"><button class="secondary-button" data-close-modal type="button">Cancel</button><button class="primary-button" type="submit">Save profile</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="event-actions-modal">
+      <div class="modal-card compact-modal">
+        <div class="modal-heading">
+          <div><p class="card-kicker">Moment created</p><h2 id="created-event-title">Your plan is ready</h2></div>
+          <button class="icon-button subtle" data-close-modal type="button" aria-label="Close"><span data-icon="x"></span></button>
+        </div>
+        <p class="modal-intro">Keep it here, or carry it into the calendar you already use.</p>
+        <div class="calendar-action-grid">
+          <button class="calendar-action" id="created-google-button" type="button"><span class="integration-logo google-icon">G</span><span><strong>Google Calendar</strong><small>Open a pre-filled event</small></span><span data-icon="arrow-up-right"></span></button>
+          <button class="calendar-action" id="created-apple-button" type="button"><span class="integration-logo apple-icon">●</span><span><strong>Apple Calendar</strong><small>Download an .ics file</small></span><span data-icon="download"></span></button>
+        </div>
+        <button class="primary-button full-width" data-close-modal type="button">Done</button>
+      </div>
+    </dialog>
+
+    <div class="toast-region" id="toast-region" aria-live="polite"></div>
+  </body>
+</html>

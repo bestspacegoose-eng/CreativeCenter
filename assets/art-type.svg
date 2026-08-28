@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900">
+  <rect width="900" height="900" fill="#eee6dc"/>
+  <rect x="94" y="85" width="712" height="730" rx="8" fill="#fcf8f0" transform="rotate(-3 450 450)"/>
+  <text x="150" y="315" fill="#30352f" font-family="Georgia,serif" font-size="155" font-style="italic">Held</text>
+  <text x="203" y="459" fill="#30352f" font-family="Georgia,serif" font-size="155">light.</text>
+  <line x1="153" y1="530" x2="705" y2="500" stroke="#d77659" stroke-width="8"/>
+  <text x="166" y="606" fill="#7a7b71" font-family="Arial,sans-serif" font-size="24" letter-spacing="8">A STUDY IN QUIET</text>
+  <circle cx="664" cy="670" r="76" fill="#d9dfd1"/>
+  <path d="M632 702c21-79 67-105 128-95-22 75-65 108-128 95Z" fill="#778873" opacity=".8"/>
+</svg>
