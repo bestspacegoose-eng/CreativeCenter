@@ -8,6 +8,9 @@ Daylily is a calm, local-first creative planning prototype designed to run direc
 - Pre-filled Google Calendar event links
 - Standards-based `.ics` downloads for Apple Calendar and other calendar apps
 - Inspiration collections, filters, saved items, and manual Pinterest/web links
+- Customizable Art, Writing, and Crochet Hobby Studios with per-studio modules
+- Cited photo references, writing/journaling prompts, and project-planning actions
+- One-page crochet search across four pattern libraries with category/source filters
 - Notes, quick capture, search, profile preferences, and six global themes
 - Custom accent colors, compact/cozy spacing, responsive mobile navigation
 - All user-entered content is escaped before it is rendered
@@ -51,6 +54,18 @@ GitHub Pages UI
 5. Store Pinterest access tokens encrypted or in a managed secrets store. Save only normalized pin metadata and links in the user database.
 6. Replace `localStorage` reads/writes in `app.js` with an authenticated data adapter, while retaining local preferences as an offline cache.
 
+The complete, security-focused setup is in [Pinterest account connection](docs/PINTEREST_BACKEND.md).
+
+## Hobby Studios and pattern search
+
+The **Hobby Studios** view includes three customizable rooms:
+
+- **Art Studio** — real-photo references, rotating prompts, practice resources, and one-click note/planner/save actions.
+- **Writing Room** — filters for daily writing, continuing projects, and reflective journaling, with a citation on every prompt.
+- **Crochet Corner** — one search interface for Ravelry, Yarnspirations, LoveCrafts, and AllFreeCrochet; results share one grid and can be filtered by category and source.
+
+The crochet search ships with a curated, clickable cross-site catalog so it works on GitHub Pages today. `config.js` can point it at a live serverless aggregator without changing the interface. See [Unified crochet pattern search backend](docs/PATTERN_SEARCH_BACKEND.md) for the API contract, security boundaries, and rollout plan.
+
 Google Calendar does not require account linking for the current flow: Daylily opens Google's standard event-creation URL. Apple Calendar receives an interoperable iCalendar file, which also works with many other calendar clients. If two-way calendar sync is needed later, add Google OAuth and CalDAV-compatible server integration separately.
 
 ## Project map
@@ -58,7 +73,9 @@ Google Calendar does not require account linking for the current flow: Daylily o
 - `index.html` — accessible app structure and dialogs
 - `styles.css` — responsive layouts and palette system
 - `app.js` — state, persistence, planner, notes, themes, and calendar export
+- `config.js` — safe public endpoint configuration (never secrets)
 - `assets/` — lightweight local artwork and favicon
+- `docs/` — Pinterest OAuth and unified pattern-search backend guides
 
 ## Privacy notes for production
 
@@ -66,4 +83,3 @@ Google Calendar does not require account linking for the current flow: Daylily o
 - Do not put private API keys in GitHub Pages JavaScript. Public “anon” configuration values are only acceptable when the backend enforces authorization rules.
 - Add account deletion, Pinterest disconnect/token revocation, data export, and a clear privacy policy before public launch.
 - Validate and normalize imported URLs and remote image metadata on the server.
-

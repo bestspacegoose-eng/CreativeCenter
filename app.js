@@ -150,6 +150,10 @@ let inspirationSearch = "";
 let noteSearch = "";
 let writingFilter = "daily";
 let crochetCategory = "scarves";
+let crochetQuery = "";
+let crochetSourceFilter = "all";
+let liveCrochetResults = [];
+let crochetSearchStatus = "curated";
 let saveTimer;
 
 const artReferences = [
@@ -214,6 +218,23 @@ const crochetSources = [
   { name: "LoveCrafts", description: "A broad library of free crochet pattern downloads.", url: "https://www.lovecrafts.com/en-us/l/crochet/crochet-patterns/free-crochet-patterns", accent: "lovecrafts" },
   { name: "AllFreeCrochet", description: "Free patterns, tutorials, and category roundups.", url: "https://www.allfreecrochet.com/", accent: "allfree" },
 ];
+
+const crochetPatternIndex = [
+  { id: "ravelry-sunshine", title: "Sunshine Scarf and Hat", source: "Ravelry", designer: "Pamela Kuloba", categories: ["scarves", "hats"], difficulty: "Easy", url: "https://www.ravelry.com/patterns/library/sunshine-scarf-and-hat", description: "A striped scarf-and-hat set using simple stitches and a 5 mm hook." },
+  { id: "ravelry-sfo", title: "SFO Hat", source: "Ravelry", designer: "carolemon design", categories: ["hats"], difficulty: "Easy", url: "https://www.ravelry.com/patterns/library/sfo-hat", description: "A practical beret-style hat for teens and adults." },
+  { id: "ravelry-snowman", title: "Amigurumi Snowman with Hat and Scarf", source: "Ravelry", designer: "Kristin Van Solkema", categories: ["amigurumi", "hats", "scarves"], difficulty: "Intermediate", url: "https://www.ravelry.com/patterns/library/amigurumi-snowman-with-hat-and-scarf", description: "A small snowman with removable accessories, worked in continuous rounds." },
+  { id: "ravelry-wrap", title: "Sweater Wrap Scarf", source: "Ravelry", designer: "Carrie M Chambers", categories: ["jackets", "scarves", "shirts"], difficulty: "Intermediate", url: "https://www.ravelry.com/patterns/library/sweater-wrap-scarf", description: "A one-piece wearable scarf that wraps into a cardigan-like layer." },
+  { id: "yarn-perfect", title: "Simply Perfect Crochet Cardigan", source: "Yarnspirations", designer: "Caron", categories: ["jackets", "shirts"], difficulty: "Easy", url: "https://www.yarnspirations.com/products/caron-simply-perfect-crochet-cardigan", description: "A relaxed buttoned cardigan with inclusive sizing and a free download." },
+  { id: "yarn-lace", title: "On the Lace Crochet Cardigan", source: "Yarnspirations", designer: "Bernat", categories: ["lace", "jackets", "blouses"], difficulty: "Intermediate", url: "https://www.yarnspirations.com/products/bernat-on-the-lace-crochet-cardigan", description: "A bright lacy cardigan designed to layer over dresses or denim." },
+  { id: "yarn-nordic", title: "Nordic Crochet Hat", source: "Yarnspirations", designer: "Patons", categories: ["hats"], difficulty: "Intermediate", url: "https://www.yarnspirations.com/en-row/products/patons-nordic-crochet-hat", description: "A colorwork winter hat using split single crochet and wool yarn." },
+  { id: "love-woven", title: "Woven Stitch Hat & Scarf", source: "LoveCrafts", designer: "Red Heart US", categories: ["hats", "scarves"], difficulty: "Easy", url: "https://www.lovecrafts.com/en-us/p/woven-stitch-hat-scarf-in-red-heart-with-love-multis-lw3319", description: "A free downloadable two-pattern set using a textured woven stitch." },
+  { id: "love-free", title: "LoveCrafts Free Crochet Collection", source: "LoveCrafts", designer: "Multiple designers", categories: ["scarves", "hats", "lace", "shirts", "blouses", "jackets", "amigurumi"], difficulty: "All levels", url: "https://www.lovecrafts.com/en-us/l/crochet/crochet-patterns/free-crochet-patterns", description: "Thousands of free PDFs with project, yarn weight, difficulty, and technique filters." },
+  { id: "afc-cowl", title: "Chunky Crochet Cowl", source: "AllFreeCrochet", designer: "AllFreeCrochet editors", categories: ["scarves"], difficulty: "Beginner", url: "https://www.allfreecrochet.com/pdf_download.php?id=632", description: "A thick, textured scarf-style cowl for a quick cold-weather project." },
+  { id: "afc-amigurumi", title: "Free Amigurumi Pattern Library", source: "AllFreeCrochet", designer: "Multiple designers", categories: ["amigurumi"], difficulty: "All levels", url: "https://www.allfreecrochet.com/Crochet-Amigurumi-Patterns", description: "A large browsable collection of animals, characters, plants, and mini makes." },
+  { id: "afc-shawls", title: "16 Crochet Shawl Patterns", source: "AllFreeCrochet", designer: "Multiple designers", categories: ["lace", "scarves", "blouses"], difficulty: "Mixed", url: "https://www.allfreecrochet.com/pdf_download.php?id=148", description: "A free collection of wearable shawls, including lacy and scalloped styles." },
+];
+
+const PATTERN_SEARCH_ENDPOINT = window.DAYLILY_CONFIG?.patternSearchEndpoint || "";
 
 const hobbyModuleMeta = {
   art: [
@@ -528,23 +549,72 @@ function ravelrySearchURL(term) {
   return `https://www.ravelry.com/patterns/search#craft=crochet&availability=free&query=${encodeURIComponent(term)}&sort=best&view=captioned_thumbs`;
 }
 
+async function searchAllPatternSites(term) {
+  crochetQuery = term.trim();
+  crochetCategory = "all";
+  crochetSearchStatus = PATTERN_SEARCH_ENDPOINT ? "loading" : "curated";
+  renderHobbyStudio();
+  if (!PATTERN_SEARCH_ENDPOINT) {
+    toast("Showing matches from the combined starter index");
+    return;
+  }
+  try {
+    const response = await fetch(`${PATTERN_SEARCH_ENDPOINT}?q=${encodeURIComponent(crochetQuery)}&free=true`, { headers: { Accept: "application/json" } });
+    if (!response.ok) throw new Error("Pattern search service unavailable");
+    const payload = await response.json();
+    const items = Array.isArray(payload) ? payload : payload.results;
+    liveCrochetResults = (Array.isArray(items) ? items : []).slice(0, 60).map((item, index) => ({
+      id: `live-${index}-${String(item.source || "pattern").toLowerCase()}`,
+      title: String(item.title || "Untitled pattern").slice(0, 180),
+      source: crochetSources.some((source) => source.name === item.source) ? item.source : "Independent source",
+      designer: String(item.designer || "Independent designer").slice(0, 120),
+      categories: Array.isArray(item.categories) ? item.categories.map(String).slice(0, 6) : [],
+      difficulty: String(item.difficulty || "Unrated").slice(0, 40),
+      url: safeURL(item.url),
+      description: String(item.description || "Free crochet pattern from the original website.").slice(0, 320),
+    })).filter((item) => item.url);
+    crochetSearchStatus = "live";
+    renderHobbyStudio();
+    toast(`Added ${liveCrochetResults.length} live pattern results`);
+  } catch {
+    crochetSearchStatus = "curated";
+    renderHobbyStudio();
+    toast("Live search is unavailable; showing the curated index instead");
+  }
+}
+
 function renderCrochetStudio() {
-  const categoryLabel = crochetCategory.charAt(0).toUpperCase() + crochetCategory.slice(1);
+  const allPatterns = [...crochetPatternIndex, ...liveCrochetResults.filter((live) => !crochetPatternIndex.some((item) => item.url === live.url))];
+  const query = crochetQuery.trim().toLowerCase();
+  const patterns = allPatterns.filter((pattern) => {
+    const categoryMatch = crochetCategory === "all" || pattern.categories.includes(crochetCategory);
+    const sourceMatch = crochetSourceFilter === "all" || pattern.source === crochetSourceFilter;
+    const queryMatch = !query || `${pattern.title} ${pattern.designer} ${pattern.source} ${pattern.description} ${pattern.categories.join(" ")}`.toLowerCase().includes(query);
+    return categoryMatch && sourceMatch && queryMatch;
+  });
+  const searchLabel = crochetQuery ? `Results for “${escapeHTML(crochetQuery)}”` : crochetCategory === "all" ? "All free patterns" : `Free ${escapeHTML(crochetCategory)} patterns`;
   const searchSection = hobbyModuleEnabled("search") ? `<section class="crochet-search-card card">
-    <div><p class="card-kicker">Free-pattern finder</p><h2>What would you like to make?</h2><p>Search Ravelry’s crochet patterns with the free filter already applied.</p></div>
-    <form id="crochet-search-form" class="crochet-search-form"><label><span data-icon="search"></span><input id="crochet-search-input" aria-label="Search free crochet patterns" placeholder="Try ‘oversized cardigan’ or ‘tiny whale’" /></label><button class="primary-button" type="submit">Search free patterns ${svgIcon("arrow-up-right")}</button></form>
-    <div class="crochet-categories">${crochetCategories.map((category) => `<button class="${category === crochetCategory ? "is-active" : ""}" data-crochet-category="${category}" type="button">${escapeHTML(category)}</button>`).join("")}</div>
+    <div><p class="card-kicker">One search · four pattern libraries</p><h2>What would you like to make?</h2><p>Search the combined Daylily index from Ravelry, Yarnspirations, LoveCrafts, and AllFreeCrochet. Every result opens its original source.</p></div>
+    <form id="crochet-search-form" class="crochet-search-form"><label><span data-icon="search"></span><input id="crochet-search-input" value="${escapeHTML(crochetQuery)}" aria-label="Search all free crochet pattern websites" placeholder="Try ‘oversized cardigan’ or ‘tiny whale’" /></label><button class="primary-button" type="submit">Search all sites ${svgIcon("search")}</button></form>
+    <div class="crochet-categories"><button class="${crochetCategory === "all" ? "is-active" : ""}" data-crochet-category="all" type="button">all</button>${crochetCategories.map((category) => `<button class="${category === crochetCategory ? "is-active" : ""}" data-crochet-category="${category}" type="button">${escapeHTML(category)}</button>`).join("")}</div>
   </section>` : "";
   const sourcesSection = hobbyModuleEnabled("sources") ? `<section class="studio-section">
-    <div class="section-heading"><div><p class="card-kicker">Browse trusted pattern libraries</p><h2>Free ${escapeHTML(crochetCategory)} patterns</h2></div><span class="results-note">Opens the original pattern website</span></div>
-    <div class="pattern-source-grid">${crochetSources.map((source) => {
-      const target = source.name === "Ravelry" ? ravelrySearchURL(`${crochetCategory} crochet`) : source.url;
-      return `<article class="pattern-source-card card ${source.accent}"><span class="pattern-source-mark">${source.name.slice(0, 1)}</span><div><h3>${escapeHTML(source.name)}</h3><p>${escapeHTML(source.description)}</p><span class="free-pill">Free patterns</span></div><a href="${escapeHTML(target)}" target="_blank" rel="noopener noreferrer" aria-label="Search ${escapeHTML(source.name)} for ${escapeHTML(crochetCategory)}">${svgIcon("arrow-up-right")}</a></article>`;
-    }).join("")}</div>
-    <div class="pattern-action-bar card"><div><span class="pattern-action-art">${svgIcon("yarn")}</span><span><strong>Search Ravelry for ${escapeHTML(categoryLabel)}</strong><small>Craft: crochet · Availability: free · Sorted by best match</small></span></div><div><button class="secondary-button" data-save-crochet-search type="button">${svgIcon("bookmark")} Save search</button><a class="primary-button" href="${escapeHTML(ravelrySearchURL(`${crochetCategory} crochet`))}" target="_blank" rel="noopener noreferrer">View patterns ${svgIcon("arrow-up-right")}</a></div></div>
+    <div class="section-heading pattern-results-heading"><div><p class="card-kicker">Combined results</p><h2>${searchLabel}</h2></div><span class="results-note">${patterns.length} results · ${crochetSearchStatus === "live" ? "Live index" : crochetSearchStatus === "loading" ? "Checking live sources…" : "Curated starter index"}</span></div>
+    <div class="source-filter-row" role="group" aria-label="Filter patterns by website"><button class="${crochetSourceFilter === "all" ? "is-active" : ""}" data-crochet-source="all" type="button">All websites</button>${crochetSources.map((source) => `<button class="${crochetSourceFilter === source.name ? "is-active" : ""}" data-crochet-source="${escapeHTML(source.name)}" type="button">${escapeHTML(source.name)}</button>`).join("")}</div>
+    ${patterns.length ? `<div class="unified-pattern-grid">${patterns.map((pattern) => `<article class="pattern-result-card card">
+      <div class="pattern-result-source"><span class="source-dot ${escapeHTML(pattern.source.toLowerCase().replaceAll(/[^a-z]/g, ""))}"></span>${escapeHTML(pattern.source)}<span class="free-pill">Free</span></div>
+      <h3>${escapeHTML(pattern.title)}</h3><p class="pattern-designer">by ${escapeHTML(pattern.designer || "Independent designer")}</p><p>${escapeHTML(pattern.description || "Free crochet pattern from the original source website.")}</p>
+      <div class="tag-row">${(pattern.categories || []).slice(0, 3).map((category) => `<span class="tag">${escapeHTML(category)}</span>`).join("")}<span class="tag">${escapeHTML(pattern.difficulty || "Unrated")}</span></div>
+      <div class="pattern-result-actions"><button type="button" data-save-pattern="${escapeHTML(pattern.id)}">${svgIcon("bookmark")} Save</button><a href="${escapeHTML(pattern.url)}" target="_blank" rel="noopener noreferrer">Open pattern ${svgIcon("arrow-up-right")}</a></div>
+    </article>`).join("")}</div>` : `<div class="empty-state"><strong>No indexed matches yet</strong>Try a broader phrase, choose “All,” or use the live source links below.</div>`}
+    <div class="live-source-search card"><div><span class="pattern-action-art">${svgIcon("globe")}</span><span><strong>Continue on every original website</strong><small>These links run the current phrase on each source while the optional live-search backend is not connected.</small></span></div><div class="live-source-links">${crochetSources.map((source) => {
+      const term = crochetQuery || (crochetCategory === "all" ? "free crochet" : `${crochetCategory} crochet`);
+      const target = source.name === "Ravelry" ? ravelrySearchURL(term) : source.name === "Yarnspirations" ? `https://www.yarnspirations.com/search?q=${encodeURIComponent(term)}` : source.name === "LoveCrafts" ? `https://www.lovecrafts.com/en-us/search?q=${encodeURIComponent(term)}` : `https://www.allfreecrochet.com/index.php?action=search&search=${encodeURIComponent(term)}`;
+      return `<a href="${escapeHTML(target)}" target="_blank" rel="noopener noreferrer">${escapeHTML(source.name)} ${svgIcon("arrow-up-right")}</a>`;
+    }).join("")}</div></div>
   </section>` : "";
   const queueSection = hobbyModuleEnabled("queue") ? `<article class="studio-project-card crochet-project-card card"><div><span class="studio-project-icon crochet-icon">${svgIcon("yarn")}</span><p class="card-kicker">Project basket</p><h2>Your next make</h2><p>Paste a pattern name, yarn idea, sizing note, or the next step.</p></div><div class="project-note-area"><textarea data-hobby-note="crochet" rows="4" placeholder="Pattern, yarn, hook, size, modifications…">${escapeHTML(state.hobbyNotes.crochet)}</textarea><div><span>Saved locally</span><button class="text-button" data-hobby-note-plan="crochet" type="button">Plan stitching time ${svgIcon("arrow-right")}</button></div></div></article>` : "";
-  return `<div class="studio-banner crochet-banner"><div><span class="studio-label">Crochet · Patterns · Projects</span><h2>Find a pattern. Follow the thread.</h2><p>Search established free-pattern libraries, save a direction, and make room to stitch.</p></div><div class="studio-banner-actions"><button class="secondary-button" type="button" data-pinterest-studio>${svgIcon("pinterest")} Import crochet board</button><button class="primary-button" type="button" data-save-crochet-search>${svgIcon("bookmark")} Save this category</button></div></div>${searchSection}${sourcesSection}${queueSection}`;
+  return `<div class="studio-banner crochet-banner"><div><span class="studio-label">Crochet · Patterns · Projects</span><h2>Find a pattern. Follow the thread.</h2><p>One calm search across four free-pattern libraries, with source filters and direct links.</p></div><div class="studio-banner-actions"><button class="secondary-button" type="button" data-pinterest-studio>${svgIcon("pinterest")} Import crochet board</button><button class="primary-button" type="button" data-save-crochet-search>${svgIcon("bookmark")} Save this search</button></div></div>${searchSection}${sourcesSection}${queueSection}`;
 }
 
 function renderHobbyStudio() {
@@ -790,8 +860,9 @@ function saveArtReference(reference) {
 }
 
 function saveCrochetSearch() {
-  const title = `Free ${crochetCategory} crochet patterns`;
-  const url = ravelrySearchURL(`${crochetCategory} crochet`);
+  const searchTerm = crochetQuery || (crochetCategory === "all" ? "free crochet patterns" : `${crochetCategory} crochet`);
+  const title = crochetQuery ? `Crochet search · ${crochetQuery}` : crochetCategory === "all" ? "Free crochet pattern search" : `Free ${crochetCategory} crochet patterns`;
+  const url = ravelrySearchURL(searchTerm);
   if (!state.inspirations.some((item) => item.sourceUrl === url)) {
     state.inspirations.unshift({ id: crypto.randomUUID(), title, category: "Ideas", tags: ["crochet", crochetCategory, "free pattern"], note: "A saved Ravelry search with crochet and free-pattern filters applied.", image: "", source: "Ravelry", sourceUrl: url, ratio: "4 / 5", saved: true });
     persist();
@@ -799,6 +870,17 @@ function saveCrochetSearch() {
     renderTodayInspiration();
   }
   toast(`${title} saved to your library`);
+}
+
+function saveCrochetPattern(pattern) {
+  if (!pattern || !pattern.url) return;
+  if (!state.inspirations.some((item) => item.sourceUrl === pattern.url)) {
+    state.inspirations.unshift({ id: crypto.randomUUID(), title: pattern.title, category: "Ideas", tags: ["crochet", ...(pattern.categories || []).slice(0, 2), "free pattern"], note: `${pattern.description}\nDesigner: ${pattern.designer}`, image: "", source: pattern.source, sourceUrl: pattern.url, ratio: "4 / 5", saved: true });
+    persist();
+    renderInspirations();
+    renderTodayInspiration();
+  }
+  toast(`“${pattern.title}” saved to your library`);
 }
 
 document.addEventListener("click", (event) => {
@@ -824,6 +906,12 @@ document.addEventListener("click", (event) => {
   const crochetCategoryButton = event.target.closest("[data-crochet-category]");
   if (crochetCategoryButton) {
     crochetCategory = crochetCategoryButton.dataset.crochetCategory;
+    renderHobbyStudio();
+  }
+
+  const crochetSourceButton = event.target.closest("[data-crochet-source]");
+  if (crochetSourceButton) {
+    crochetSourceFilter = crochetSourceButton.dataset.crochetSource;
     renderHobbyStudio();
   }
 
@@ -872,6 +960,11 @@ document.addEventListener("click", (event) => {
 
   if (event.target.closest("[data-new-writing-note]")) createStudioNote({ title: "Untitled writing", body: "", tags: ["writing"] });
   if (event.target.closest("[data-save-crochet-search]")) saveCrochetSearch();
+  const savePatternButton = event.target.closest("[data-save-pattern]");
+  if (savePatternButton) {
+    const pattern = [...crochetPatternIndex, ...liveCrochetResults].find((item) => item.id === savePatternButton.dataset.savePattern);
+    saveCrochetPattern(pattern);
+  }
   if (event.target.closest("[data-pinterest-studio]")) openDialog("#integrations-modal");
 
   const hobbyNotePlan = event.target.closest("[data-hobby-note-plan]");
@@ -1023,7 +1116,7 @@ document.addEventListener("submit", (event) => {
   if (event.target.id !== "crochet-search-form") return;
   event.preventDefault();
   const term = document.querySelector("#crochet-search-input").value.trim() || `${crochetCategory} crochet`;
-  window.open(ravelrySearchURL(term), "_blank", "noopener,noreferrer");
+  searchAllPatternSites(term);
 });
 
 document.addEventListener("input", (event) => {
