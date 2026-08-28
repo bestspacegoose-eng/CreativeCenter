@@ -27,6 +27,18 @@ const iconPaths = {
   external: '<path d="M15 3h6v6M10 14 21 3M18 13v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h7"/>',
   bookmark: '<path d="M6 3h12v18l-6-4-6 4V3Z"/>',
   check: '<path d="m5 12 4 4L19 6"/>',
+  palette: '<circle cx="12" cy="12" r="9"/><path d="M7.5 10h.01M9.5 6.8h.01M13.5 6.5h.01M17 9h.01"/><path d="M16.5 15.5c0 1.5-1.3 2.5-2.7 2.5H12a1.8 1.8 0 0 1 0-3.5h1.2c.8 0 1.3-.5 1.3-1.2"/>',
+  sliders: '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+  brush: '<path d="m14.5 4.5 5 5L11 18H6v-5Z"/><path d="M5.5 18c0 2-1.2 3-3.5 3 .8-1 1-2 .5-3.2-.4-1.3.5-2.8 1.9-2.8H6"/><path d="m13 6 5 5"/>',
+  "pen-line": '<path d="m12 19 7-7 3 3-7 7-4 1Z"/><path d="m18 13-7-7-8 8v4h4l8-8"/><path d="M3 22h6"/>',
+  yarn: '<circle cx="12" cy="12" r="8"/><path d="M7 6.5c4 3 7.5 7 9.5 11M5 10c5 0 10 2.5 14 6M6 16c3-3 7-5 13-5M20 20c1.5 0 2.5.7 2.5 2"/>',
+  camera: '<path d="M14.5 5 13 3h-2L9.5 5H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"/><circle cx="12" cy="12" r="4"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  folder: '<path d="M3 5h7l2 2h9v12H3Z"/>',
+  heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/>',
+  quote: '<path d="M9 11H4a5 5 0 0 1 5-5v10H4v-5M20 11h-5a5 5 0 0 1 5-5v10h-5v-5"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-5.5-3.5-9S9.5 5.5 12 3Z"/>',
+  layers: '<path d="m12 2 9 5-9 5-9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/>',
 };
 
 const svgIcon = (name, label = "") => {
@@ -74,6 +86,14 @@ const defaultState = {
   customAccent: "",
   cozy: true,
   profile: { name: "Jodie Rivera", email: "" },
+  activeHobby: "art",
+  hobbyHome: false,
+  hobbyModules: {
+    art: { references: true, prompts: true, project: true },
+    writing: { prompts: true, projects: true, journal: true },
+    crochet: { search: true, sources: true, queue: true },
+  },
+  hobbyNotes: { art: "", writing: "", crochet: "" },
   events: [
     { id: crypto.randomUUID(), title: "Slow morning & intentions", date: todayISO, time: "08:30", duration: 30, notes: "Coffee, journal, and choose one focus.", color: "sage" },
     { id: crypto.randomUUID(), title: "Creative deep work", date: todayISO, time: "10:00", duration: 90, notes: "Moodboard direction and first round of layouts.", color: "coral" },
@@ -104,6 +124,12 @@ function loadState() {
       ...structuredClone(defaultState),
       ...stored,
       profile: { ...defaultState.profile, ...(stored.profile || {}) },
+      hobbyModules: {
+        art: { ...defaultState.hobbyModules.art, ...(stored.hobbyModules?.art || {}) },
+        writing: { ...defaultState.hobbyModules.writing, ...(stored.hobbyModules?.writing || {}) },
+        crochet: { ...defaultState.hobbyModules.crochet, ...(stored.hobbyModules?.crochet || {}) },
+      },
+      hobbyNotes: { ...defaultState.hobbyNotes, ...(stored.hobbyNotes || {}) },
       events: Array.isArray(stored.events) ? stored.events : defaultState.events,
       inspirations: Array.isArray(stored.inspirations) ? stored.inspirations : defaultState.inspirations,
       notes: Array.isArray(stored.notes) && stored.notes.length ? stored.notes : defaultState.notes,
@@ -122,7 +148,90 @@ let createdEventId = null;
 let inspirationFilter = "all";
 let inspirationSearch = "";
 let noteSearch = "";
+let writingFilter = "daily";
+let crochetCategory = "scarves";
 let saveTimer;
+
+const artReferences = [
+  {
+    id: "fruit-study",
+    title: "Fruit & ceramic still life",
+    focus: "Color, reflected light, and rounded form",
+    prompt: "Limit yourself to five mixed colors and look for the coolest shadow.",
+    image: "https://images.pexels.com/photos/12845018/pexels-photo-12845018.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    source: "Pexels · Nandhu Kumar",
+    sourceUrl: "https://www.pexels.com/photo/12845018/",
+  },
+  {
+    id: "mountain-study",
+    title: "Mountain reflected in still water",
+    focus: "Large shapes, atmosphere, and symmetry",
+    prompt: "Block the scene in with only three values before adding color.",
+    image: "https://images.pexels.com/photos/6827528/pexels-photo-6827528.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    source: "Pexels · Dario Fernandez Ruz",
+    sourceUrl: "https://www.pexels.com/photo/mountain-reflection-on-the-placid-lake-surface-6827528/",
+  },
+  {
+    id: "shadow-study",
+    title: "Doorway & geometric shadow",
+    focus: "Negative space, edges, and contrast",
+    prompt: "Draw the shadow shapes first and let the doorway emerge around them.",
+    image: "https://images.pexels.com/photos/6101502/pexels-photo-6101502.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    source: "Pexels · Robin Singh",
+    sourceUrl: "https://www.pexels.com/photo/shadows-on-building-door-6101502/",
+  },
+];
+
+const artDailyPrompts = [
+  "Paint an ordinary object as if it were a tiny monument.",
+  "Draw a moving subject using one continuous line.",
+  "Build a landscape from three shapes and one surprising color.",
+  "Study only the shadows on a plant for fifteen minutes.",
+  "Make a self-portrait without drawing any facial features.",
+  "Turn the view from your window into an abstract pattern.",
+  "Draw the same object once from memory and once from observation.",
+];
+
+const writingPrompts = [
+  { id: "wd-space", category: "daily", label: "Daily fiction", prompt: "Begin with a room where gravity behaves differently for exactly one person.", source: "Writer’s Digest prompt library", sourceUrl: "https://www.writersdigest.com/prompts", time: "15 min" },
+  { id: "reedsy-object", category: "daily", label: "Daily fiction", prompt: "A borrowed object returns years later with a note tucked inside it.", source: "Reedsy Prompts directory", sourceUrl: "https://reedsy.com/creative-writing-prompts/", time: "20 min" },
+  { id: "wd-pov", category: "daily", label: "Point of view", prompt: "Retell a familiar conflict from the perspective of the person causing it.", source: "Writer’s Digest prompt library", sourceUrl: "https://www.writersdigest.com/prompts", time: "20 min" },
+  { id: "reedsy-mystery", category: "daily", label: "Mystery", prompt: "Everyone remembers the town festival except the person who organized it.", source: "Reedsy Prompts directory", sourceUrl: "https://reedsy.com/creative-writing-prompts/", time: "25 min" },
+  { id: "project-scene", category: "projects", label: "Continue a project", prompt: "Write the scene your protagonist has been avoiding. Let them enter late and leave with the wrong conclusion.", source: "Daylily project practice · informed by Reedsy’s writing-routine guidance", sourceUrl: "https://reedsy.com/creative-writing-prompts/", time: "30 min" },
+  { id: "project-thread", category: "projects", label: "Story thread", prompt: "Choose one quiet detail from an earlier chapter and make it matter in the next scene.", source: "Daylily project practice", sourceUrl: "https://reedsy.com/creative-writing-prompts/", time: "25 min" },
+  { id: "project-voice", category: "projects", label: "Voice check", prompt: "Rewrite one page using only words your viewpoint character would naturally notice.", source: "Daylily project practice", sourceUrl: "https://www.writersdigest.com/prompts", time: "20 min" },
+  { id: "journal-gratitude", category: "journal", label: "Grounding", prompt: "Name three things that went well today. For each one, explore what helped it happen and how it affected you.", source: "U.S. Department of Veterans Affairs · Therapeutic Journaling", sourceUrl: "https://www.va.gov/WHOLEHEALTHLIBRARY/docs/therapeutic-journaling.pdf", time: "10 min" },
+  { id: "journal-chapter", category: "journal", label: "Life story", prompt: "If this season were a chapter, what would you call it? Describe what it is teaching you about your needs and direction.", source: "VA guided-autobiography overview", sourceUrl: "https://www.va.gov/WHOLEHEALTHLIBRARY/docs/therapeutic-journaling.pdf", time: "15 min" },
+  { id: "journal-expression", category: "journal", label: "Expressive writing", prompt: "Choose a challenge that feels manageable today. Write freely about its effects and connections without editing yourself.", source: "Greater Good in Action · UC Berkeley", sourceUrl: "https://ggia.berkeley.edu/practice/expressive_writing%C2%A0", time: "20 min" },
+  { id: "journal-observer", category: "journal", label: "Perspective", prompt: "Describe a difficult moment from the view of a kind, neutral observer. What might they notice that you could not see then?", source: "Greater Good in Action · UC Berkeley", sourceUrl: "https://ggia.berkeley.edu/practice/expressive_writing%C2%A0", time: "15 min" },
+];
+
+const crochetCategories = ["scarves", "hats", "lace", "shirts", "blouses", "jackets", "amigurumi"];
+
+const crochetSources = [
+  { name: "Ravelry", description: "Large pattern database with craft, availability, and category filters.", url: "https://www.ravelry.com/patterns/search", accent: "ravelry" },
+  { name: "Yarnspirations", description: "Free crochet patterns from brands including Bernat, Caron, and Red Heart.", url: "https://www.yarnspirations.com/collections/patterns", accent: "yarnspirations" },
+  { name: "LoveCrafts", description: "A broad library of free crochet pattern downloads.", url: "https://www.lovecrafts.com/en-us/l/crochet/crochet-patterns/free-crochet-patterns", accent: "lovecrafts" },
+  { name: "AllFreeCrochet", description: "Free patterns, tutorials, and category roundups.", url: "https://www.allfreecrochet.com/", accent: "allfree" },
+];
+
+const hobbyModuleMeta = {
+  art: [
+    { key: "references", title: "Daily photo references", description: "Real reference photos with note, reminder, and save actions." },
+    { key: "prompts", title: "Prompts & practice sites", description: "A rotating prompt plus trusted drawing practice links." },
+    { key: "project", title: "Current art project", description: "A small planning card for the piece you are making now." },
+  ],
+  writing: [
+    { key: "prompts", title: "Daily writing prompts", description: "Source-linked fiction prompts and quick starts." },
+    { key: "projects", title: "Existing project tools", description: "Prompts designed to move a longer work forward." },
+    { key: "journal", title: "Reflective journaling", description: "Cautious prompts adapted from cited therapeutic sources." },
+  ],
+  crochet: [
+    { key: "search", title: "Pattern search", description: "Category shortcuts and a free-pattern search box." },
+    { key: "sources", title: "Pattern websites", description: "Direct links to established free pattern libraries." },
+    { key: "queue", title: "Project queue", description: "Save a pattern idea and choose when you want to begin." },
+  ],
+};
 
 function persist() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -327,6 +436,133 @@ function renderProfile() {
   document.querySelector("#account-email").value = state.profile.email || "";
 }
 
+function hobbyModuleEnabled(key) {
+  return state.hobbyModules[state.activeHobby]?.[key] !== false;
+}
+
+function sourceCitation(label, url) {
+  return `<a class="source-citation" href="${escapeHTML(url)}" target="_blank" rel="noopener noreferrer">${escapeHTML(label)} ${svgIcon("arrow-up-right")}</a>`;
+}
+
+function renderHobbyTabs() {
+  document.querySelectorAll("[data-hobby]").forEach((button) => {
+    const selected = button.dataset.hobby === state.activeHobby;
+    button.classList.toggle("is-active", selected);
+    button.setAttribute("aria-selected", String(selected));
+  });
+}
+
+function renderArtStudio() {
+  const dailyPrompt = artDailyPrompts[Math.floor(Date.now() / 86_400_000) % artDailyPrompts.length];
+  const referenceSection = hobbyModuleEnabled("references") ? `
+    <section class="studio-section">
+      <div class="section-heading">
+        <div><p class="card-kicker">Licensed, real-world photography</p><h2>Today’s reference deck</h2></div>
+        ${sourceCitation("Pexels source pages", "https://www.pexels.com/")}
+      </div>
+      <div class="reference-grid">
+        ${artReferences.map((reference) => `<article class="reference-card card">
+          <a class="reference-photo" href="${escapeHTML(reference.sourceUrl)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHTML(reference.image)}" alt="${escapeHTML(reference.title)}" loading="lazy" /></a>
+          <div class="reference-copy"><span class="reference-focus">${escapeHTML(reference.focus)}</span><h3>${escapeHTML(reference.title)}</h3><p>${escapeHTML(reference.prompt)}</p>
+            <a class="photo-credit" href="${escapeHTML(reference.sourceUrl)}" target="_blank" rel="noopener noreferrer">Photo: ${escapeHTML(reference.source)} ${svgIcon("arrow-up-right")}</a>
+            <div class="reference-actions">
+              <button type="button" data-reference-note="${reference.id}">${svgIcon("notebook")} Note</button>
+              <button type="button" data-reference-remind="${reference.id}">${svgIcon("calendar")} Plan</button>
+              <button type="button" data-reference-save="${reference.id}">${svgIcon("bookmark")} Save</button>
+            </div>
+          </div>
+        </article>`).join("")}
+      </div>
+    </section>` : "";
+
+  const promptSection = hobbyModuleEnabled("prompts") ? `
+    <div class="studio-feature-grid">
+      <article class="daily-prompt-card card art-prompt-card">
+        <div class="prompt-orbit" aria-hidden="true"><span>✦</span></div>
+        <p class="card-kicker">Daily art invitation</p><h2>${escapeHTML(dailyPrompt)}</h2>
+        <p>Keep it small: twenty minutes, one page, no need to finish.</p>
+        <div class="prompt-actions"><button class="primary-button" type="button" data-art-prompt-note>${svgIcon("brush")} Begin a study</button><button class="secondary-button" type="button" data-art-prompt-plan>${svgIcon("clock")} Schedule</button></div>
+        <div class="citation-row">Practice links: ${sourceCitation("ArtPrompts", "https://artprompts.org/")} ${sourceCitation("Line of Action", "https://line-of-action.com/")}</div>
+      </article>
+      <article class="practice-sites card">
+        <div class="section-heading compact"><div><p class="card-kicker">Open a practice tool</p><h2>Fresh references</h2></div><span class="source-icon" data-icon="globe"></span></div>
+        <a href="https://line-of-action.com/" target="_blank" rel="noopener noreferrer"><span class="site-mark">LA</span><span><strong>Line of Action</strong><small>Timed figure, animal, hand, face, still-life, and environment photos</small></span>${svgIcon("arrow-up-right")}</a>
+        <a href="https://bodiesinmotion.photo/" target="_blank" rel="noopener noreferrer"><span class="site-mark">BM</span><span><strong>Bodies in Motion</strong><small>Pose search, timed studies, and the daily QuickDraw challenge</small></span>${svgIcon("arrow-up-right")}</a>
+        <a href="https://artprompts.org/" target="_blank" rel="noopener noreferrer"><span class="site-mark">AP</span><span><strong>ArtPrompts</strong><small>Randomized ideas for drawing and digital art practice</small></span>${svgIcon("arrow-up-right")}</a>
+      </article>
+    </div>` : "";
+
+  const projectSection = hobbyModuleEnabled("project") ? `
+    <article class="studio-project-card card">
+      <div><span class="studio-project-icon art-icon">${svgIcon("layers")}</span><p class="card-kicker">On your easel</p><h2>Current piece notes</h2><p>Keep the next decision visible so it is easier to return.</p></div>
+      <div class="project-note-area"><textarea data-hobby-note="art" rows="4" placeholder="Palette, materials, next mark, questions…">${escapeHTML(state.hobbyNotes.art)}</textarea><div><span>Saved locally</span><button class="text-button" data-hobby-note-plan="art" type="button">Plan a studio session ${svgIcon("arrow-right")}</button></div></div>
+    </article>` : "";
+
+  return `<div class="studio-banner art-banner"><div><span class="studio-label">Art · Painting · Drawing</span><h2>Look closely. Make freely.</h2><p>Reference photography, daily prompts, and just enough structure to help you begin.</p></div><div class="studio-banner-actions"><button class="secondary-button" type="button" data-pinterest-studio>${svgIcon("pinterest")} Import a board</button><button class="primary-button" type="button" data-open-inspiration>${svgIcon("plus")} Add a reference</button></div></div>${promptSection}${referenceSection}${projectSection}`;
+}
+
+function renderWritingStudio() {
+  const moduleForCategory = { daily: "prompts", projects: "projects", journal: "journal" };
+  const prompts = writingPrompts.filter((prompt) => prompt.category === writingFilter && hobbyModuleEnabled(moduleForCategory[prompt.category]));
+  const safety = writingFilter === "journal" ? `<div class="care-note"><span>${svgIcon("heart")}</span><p><strong>A gentle boundary</strong> These reflective prompts are educational, not therapy or medical care. Choose only what feels manageable, stop if writing becomes overwhelming, and reach out to a qualified professional when support would help.</p></div>` : "";
+  return `<div class="studio-banner writing-banner"><div><span class="studio-label">Writing · Projects · Journaling</span><h2>Find the next true sentence.</h2><p>Choose a quick spark, move a longer project forward, or make private room for reflection.</p></div><div class="studio-banner-actions"><button class="secondary-button" type="button" data-view-link="notes">${svgIcon("notebook")} Open notebook</button><button class="primary-button" type="button" data-new-writing-note>${svgIcon("plus")} Blank page</button></div></div>
+    <div class="writing-filter-bar card">
+      <div class="writing-filters" role="tablist" aria-label="Filter writing prompts">
+        <button class="${writingFilter === "daily" ? "is-active" : ""}" data-writing-filter="daily" type="button">${svgIcon("sun")} Daily writing</button>
+        <button class="${writingFilter === "projects" ? "is-active" : ""}" data-writing-filter="projects" type="button">${svgIcon("folder")} Existing projects</button>
+        <button class="${writingFilter === "journal" ? "is-active" : ""}" data-writing-filter="journal" type="button">${svgIcon("heart")} Journaling</button>
+      </div>
+      <span>${prompts.length} prompts</span>
+    </div>
+    ${safety}
+    ${prompts.length ? `<section class="writing-prompt-grid">${prompts.map((prompt) => `<article class="writing-prompt-card card">
+      <div class="writing-prompt-top"><span class="prompt-category">${escapeHTML(prompt.label)}</span><span class="prompt-time">${svgIcon("clock")} ${escapeHTML(prompt.time)}</span></div>
+      <blockquote>${escapeHTML(prompt.prompt)}</blockquote>
+      ${sourceCitation(prompt.source, prompt.sourceUrl)}
+      <div class="prompt-card-actions"><button type="button" data-writing-note="${prompt.id}">${svgIcon("pen-line")} Write now</button><button type="button" data-writing-plan="${prompt.id}">${svgIcon("calendar")} Schedule</button></div>
+    </article>`).join("")}</section>` : `<div class="empty-state"><strong>This module is hidden</strong>Use “Customize studio” to turn it back on.</div>`}
+    <div class="sources-disclosure card"><span>${svgIcon("quote")}</span><div><strong>How sources are used</strong><p>Prompts are original Daylily wording, informed by the linked prompt libraries or adapted from the cited well-being practices. Source links stay attached when you send a prompt to Notes.</p></div>${sourceCitation("View VA guidance", "https://www.va.gov/WHOLEHEALTHLIBRARY/docs/therapeutic-journaling.pdf")}${sourceCitation("View Berkeley practice", "https://ggia.berkeley.edu/practice/expressive_writing%C2%A0")}</div>`;
+}
+
+function ravelrySearchURL(term) {
+  return `https://www.ravelry.com/patterns/search#craft=crochet&availability=free&query=${encodeURIComponent(term)}&sort=best&view=captioned_thumbs`;
+}
+
+function renderCrochetStudio() {
+  const categoryLabel = crochetCategory.charAt(0).toUpperCase() + crochetCategory.slice(1);
+  const searchSection = hobbyModuleEnabled("search") ? `<section class="crochet-search-card card">
+    <div><p class="card-kicker">Free-pattern finder</p><h2>What would you like to make?</h2><p>Search Ravelry’s crochet patterns with the free filter already applied.</p></div>
+    <form id="crochet-search-form" class="crochet-search-form"><label><span data-icon="search"></span><input id="crochet-search-input" aria-label="Search free crochet patterns" placeholder="Try ‘oversized cardigan’ or ‘tiny whale’" /></label><button class="primary-button" type="submit">Search free patterns ${svgIcon("arrow-up-right")}</button></form>
+    <div class="crochet-categories">${crochetCategories.map((category) => `<button class="${category === crochetCategory ? "is-active" : ""}" data-crochet-category="${category}" type="button">${escapeHTML(category)}</button>`).join("")}</div>
+  </section>` : "";
+  const sourcesSection = hobbyModuleEnabled("sources") ? `<section class="studio-section">
+    <div class="section-heading"><div><p class="card-kicker">Browse trusted pattern libraries</p><h2>Free ${escapeHTML(crochetCategory)} patterns</h2></div><span class="results-note">Opens the original pattern website</span></div>
+    <div class="pattern-source-grid">${crochetSources.map((source) => {
+      const target = source.name === "Ravelry" ? ravelrySearchURL(`${crochetCategory} crochet`) : source.url;
+      return `<article class="pattern-source-card card ${source.accent}"><span class="pattern-source-mark">${source.name.slice(0, 1)}</span><div><h3>${escapeHTML(source.name)}</h3><p>${escapeHTML(source.description)}</p><span class="free-pill">Free patterns</span></div><a href="${escapeHTML(target)}" target="_blank" rel="noopener noreferrer" aria-label="Search ${escapeHTML(source.name)} for ${escapeHTML(crochetCategory)}">${svgIcon("arrow-up-right")}</a></article>`;
+    }).join("")}</div>
+    <div class="pattern-action-bar card"><div><span class="pattern-action-art">${svgIcon("yarn")}</span><span><strong>Search Ravelry for ${escapeHTML(categoryLabel)}</strong><small>Craft: crochet · Availability: free · Sorted by best match</small></span></div><div><button class="secondary-button" data-save-crochet-search type="button">${svgIcon("bookmark")} Save search</button><a class="primary-button" href="${escapeHTML(ravelrySearchURL(`${crochetCategory} crochet`))}" target="_blank" rel="noopener noreferrer">View patterns ${svgIcon("arrow-up-right")}</a></div></div>
+  </section>` : "";
+  const queueSection = hobbyModuleEnabled("queue") ? `<article class="studio-project-card crochet-project-card card"><div><span class="studio-project-icon crochet-icon">${svgIcon("yarn")}</span><p class="card-kicker">Project basket</p><h2>Your next make</h2><p>Paste a pattern name, yarn idea, sizing note, or the next step.</p></div><div class="project-note-area"><textarea data-hobby-note="crochet" rows="4" placeholder="Pattern, yarn, hook, size, modifications…">${escapeHTML(state.hobbyNotes.crochet)}</textarea><div><span>Saved locally</span><button class="text-button" data-hobby-note-plan="crochet" type="button">Plan stitching time ${svgIcon("arrow-right")}</button></div></div></article>` : "";
+  return `<div class="studio-banner crochet-banner"><div><span class="studio-label">Crochet · Patterns · Projects</span><h2>Find a pattern. Follow the thread.</h2><p>Search established free-pattern libraries, save a direction, and make room to stitch.</p></div><div class="studio-banner-actions"><button class="secondary-button" type="button" data-pinterest-studio>${svgIcon("pinterest")} Import crochet board</button><button class="primary-button" type="button" data-save-crochet-search>${svgIcon("bookmark")} Save this category</button></div></div>${searchSection}${sourcesSection}${queueSection}`;
+}
+
+function renderHobbyStudio() {
+  const content = document.querySelector("#hobby-content");
+  if (!content) return;
+  renderHobbyTabs();
+  content.innerHTML = state.activeHobby === "writing" ? renderWritingStudio() : state.activeHobby === "crochet" ? renderCrochetStudio() : renderArtStudio();
+  hydrateIcons(content);
+}
+
+function openHobbySettings() {
+  const hobbyNames = { art: "art studio", writing: "writing room", crochet: "crochet corner" };
+  document.querySelector("#hobby-settings-title").textContent = `Customize ${hobbyNames[state.activeHobby]}`;
+  document.querySelector("#hobby-home-toggle").checked = state.hobbyHome;
+  document.querySelector("#hobby-settings-options").innerHTML = hobbyModuleMeta[state.activeHobby].map((module) => `<label class="module-option"><span class="module-option-icon">${svgIcon("layers")}</span><span><strong>${escapeHTML(module.title)}</strong><small>${escapeHTML(module.description)}</small></span><input type="checkbox" name="module" value="${module.key}" ${hobbyModuleEnabled(module.key) ? "checked" : ""} /><i></i></label>`).join("");
+  openDialog("#hobby-settings-modal");
+}
+
 function applyTheme() {
   document.documentElement.dataset.theme = state.theme;
   document.documentElement.dataset.cozy = String(state.cozy);
@@ -361,6 +597,7 @@ function renderAll() {
   renderPlannerSchedule();
   renderTodayInspiration();
   renderInspirations();
+  renderHobbyStudio();
   renderNotesList();
   renderNoteEditor();
   renderProfile();
@@ -369,7 +606,7 @@ function renderAll() {
 }
 
 function setView(view, updateHash = true) {
-  const validView = ["today", "planner", "inspiration", "notes"].includes(view) ? view : "today";
+  const validView = ["today", "planner", "hobbies", "inspiration", "notes"].includes(view) ? view : "today";
   state.view = validView;
   document.querySelectorAll("[data-view-panel]").forEach((panel) => panel.classList.toggle("is-active", panel.dataset.viewPanel === validView));
   document.querySelectorAll("[data-view]").forEach((button) => button.classList.toggle("is-active", button.dataset.view === validView));
@@ -385,12 +622,14 @@ function openDialog(id) {
   if (dialog && !dialog.open) dialog.showModal();
 }
 
-function openEventModal() {
+function openEventModal(preset = {}) {
   const form = document.querySelector("#event-form");
   form.reset();
-  document.querySelector("#event-date").value = state.view === "planner" ? state.selectedDate : todayISO;
-  document.querySelector("#event-time").value = "10:00";
-  document.querySelector("#event-duration").value = "60";
+  document.querySelector("#event-title").value = preset.title || "";
+  document.querySelector("#event-date").value = preset.date || (state.view === "planner" ? state.selectedDate : todayISO);
+  document.querySelector("#event-time").value = preset.time || "10:00";
+  document.querySelector("#event-duration").value = String(preset.duration || 60);
+  document.querySelector("#event-notes").value = preset.notes || "";
   openDialog("#event-modal");
   window.setTimeout(() => document.querySelector("#event-title").focus(), 30);
 }
@@ -521,6 +760,47 @@ function handleGlobalSearch() {
   toast("No matches yet — try another phrase");
 }
 
+function createStudioNote({ title, body, tags = [] }) {
+  const note = { id: crypto.randomUUID(), title, tags, body, updatedAt: Date.now() };
+  state.notes.unshift(note);
+  state.activeNoteId = note.id;
+  persist();
+  renderNotesList();
+  renderNoteEditor();
+  setView("notes");
+  window.setTimeout(() => document.querySelector("#note-body").focus(), 80);
+}
+
+function scheduleStudioMoment(title, notes, duration = 30) {
+  openEventModal({ title, notes, duration, date: todayISO, time: "18:00" });
+}
+
+function saveArtReference(reference) {
+  const existing = state.inspirations.find((item) => item.sourceUrl === reference.sourceUrl);
+  if (existing) {
+    existing.saved = true;
+    toast("That reference is already in your library");
+  } else {
+    state.inspirations.unshift({ id: crypto.randomUUID(), title: reference.title, category: "Ideas", tags: ["art reference", "photo study"], note: reference.prompt, image: reference.image, source: "Pexels", sourceUrl: reference.sourceUrl, ratio: "4 / 5", saved: true });
+    toast("Photo reference saved to your library");
+  }
+  persist();
+  renderInspirations();
+  renderTodayInspiration();
+}
+
+function saveCrochetSearch() {
+  const title = `Free ${crochetCategory} crochet patterns`;
+  const url = ravelrySearchURL(`${crochetCategory} crochet`);
+  if (!state.inspirations.some((item) => item.sourceUrl === url)) {
+    state.inspirations.unshift({ id: crypto.randomUUID(), title, category: "Ideas", tags: ["crochet", crochetCategory, "free pattern"], note: "A saved Ravelry search with crochet and free-pattern filters applied.", image: "", source: "Ravelry", sourceUrl: url, ratio: "4 / 5", saved: true });
+    persist();
+    renderInspirations();
+    renderTodayInspiration();
+  }
+  toast(`${title} saved to your library`);
+}
+
 document.addEventListener("click", (event) => {
   const viewButton = event.target.closest("[data-view]");
   if (viewButton) setView(viewButton.dataset.view);
@@ -528,8 +808,78 @@ document.addEventListener("click", (event) => {
   const viewLink = event.target.closest("[data-view-link]");
   if (viewLink) setView(viewLink.dataset.viewLink);
 
+  const hobbyButton = event.target.closest("[data-hobby]");
+  if (hobbyButton) {
+    state.activeHobby = hobbyButton.dataset.hobby;
+    persist();
+    renderHobbyStudio();
+  }
+
+  const writingFilterButton = event.target.closest("[data-writing-filter]");
+  if (writingFilterButton) {
+    writingFilter = writingFilterButton.dataset.writingFilter;
+    renderHobbyStudio();
+  }
+
+  const crochetCategoryButton = event.target.closest("[data-crochet-category]");
+  if (crochetCategoryButton) {
+    crochetCategory = crochetCategoryButton.dataset.crochetCategory;
+    renderHobbyStudio();
+  }
+
   if (event.target.closest("[data-open-event]")) openEventModal();
   if (event.target.closest("[data-open-inspiration]")) openDialog("#inspiration-modal");
+
+  const referenceNote = event.target.closest("[data-reference-note]");
+  if (referenceNote) {
+    const reference = artReferences.find((item) => item.id === referenceNote.dataset.referenceNote);
+    if (reference) createStudioNote({ title: `Study notes · ${reference.title}`, body: `${reference.prompt}\n\nReference: ${reference.sourceUrl}\n\nObservations:\n`, tags: ["art", "reference study"] });
+  }
+
+  const referenceReminder = event.target.closest("[data-reference-remind]");
+  if (referenceReminder) {
+    const reference = artReferences.find((item) => item.id === referenceReminder.dataset.referenceRemind);
+    if (reference) scheduleStudioMoment(`Art study · ${reference.title}`, `${reference.prompt}\nReference: ${reference.sourceUrl}`, 45);
+  }
+
+  const referenceSave = event.target.closest("[data-reference-save]");
+  if (referenceSave) {
+    const reference = artReferences.find((item) => item.id === referenceSave.dataset.referenceSave);
+    if (reference) saveArtReference(reference);
+  }
+
+  if (event.target.closest("[data-art-prompt-note]")) {
+    const prompt = artDailyPrompts[Math.floor(Date.now() / 86_400_000) % artDailyPrompts.length];
+    createStudioNote({ title: "Today’s art study", body: `${prompt}\n\nMaterials:\n\nWhat I noticed:\n`, tags: ["art", "daily prompt"] });
+  }
+
+  if (event.target.closest("[data-art-prompt-plan]")) {
+    const prompt = artDailyPrompts[Math.floor(Date.now() / 86_400_000) % artDailyPrompts.length];
+    scheduleStudioMoment("Daily art practice", prompt, 30);
+  }
+
+  const writingNoteButton = event.target.closest("[data-writing-note]");
+  if (writingNoteButton) {
+    const prompt = writingPrompts.find((item) => item.id === writingNoteButton.dataset.writingNote);
+    if (prompt) createStudioNote({ title: `${prompt.label} · ${prompt.prompt.split(" ").slice(0, 5).join(" ")}…`, body: `${prompt.prompt}\n\nSource: ${prompt.source}\n${prompt.sourceUrl}\n\n`, tags: ["writing", prompt.category] });
+  }
+
+  const writingPlanButton = event.target.closest("[data-writing-plan]");
+  if (writingPlanButton) {
+    const prompt = writingPrompts.find((item) => item.id === writingPlanButton.dataset.writingPlan);
+    if (prompt) scheduleStudioMoment(prompt.category === "journal" ? "Journaling time" : "Writing session", `${prompt.prompt}\nSource: ${prompt.sourceUrl}`, Number.parseInt(prompt.time, 10) || 20);
+  }
+
+  if (event.target.closest("[data-new-writing-note]")) createStudioNote({ title: "Untitled writing", body: "", tags: ["writing"] });
+  if (event.target.closest("[data-save-crochet-search]")) saveCrochetSearch();
+  if (event.target.closest("[data-pinterest-studio]")) openDialog("#integrations-modal");
+
+  const hobbyNotePlan = event.target.closest("[data-hobby-note-plan]");
+  if (hobbyNotePlan) {
+    const hobby = hobbyNotePlan.dataset.hobbyNotePlan;
+    const title = hobby === "crochet" ? "Crochet project time" : "Art studio session";
+    scheduleStudioMoment(title, state.hobbyNotes[hobby] || "Continue the current creative project.", hobby === "crochet" ? 60 : 45);
+  }
 
   const closeButton = event.target.closest("[data-close-modal]");
   if (closeButton) closeButton.closest("dialog")?.close();
@@ -652,6 +1002,35 @@ document.querySelector("#account-form").addEventListener("submit", (event) => {
   renderProfile();
   document.querySelector("#account-modal").close();
   toast("Local profile updated");
+});
+
+document.querySelector("#customize-hobby").addEventListener("click", openHobbySettings);
+
+document.querySelector("#hobby-settings-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const enabled = new Set(new FormData(event.currentTarget).getAll("module"));
+  hobbyModuleMeta[state.activeHobby].forEach((module) => {
+    state.hobbyModules[state.activeHobby][module.key] = enabled.has(module.key);
+  });
+  state.hobbyHome = document.querySelector("#hobby-home-toggle").checked;
+  persist();
+  renderHobbyStudio();
+  document.querySelector("#hobby-settings-modal").close();
+  toast("Studio preferences saved");
+});
+
+document.addEventListener("submit", (event) => {
+  if (event.target.id !== "crochet-search-form") return;
+  event.preventDefault();
+  const term = document.querySelector("#crochet-search-input").value.trim() || `${crochetCategory} crochet`;
+  window.open(ravelrySearchURL(term), "_blank", "noopener,noreferrer");
+});
+
+document.addEventListener("input", (event) => {
+  const hobbyNote = event.target.closest("[data-hobby-note]");
+  if (!hobbyNote) return;
+  state.hobbyNotes[hobbyNote.dataset.hobbyNote] = hobbyNote.value;
+  debouncePersist();
 });
 
 document.querySelector("#focus-input").addEventListener("input", (event) => {
@@ -838,5 +1217,5 @@ document.querySelectorAll("dialog").forEach((dialog) => dialog.addEventListener(
 }));
 
 renderAll();
-const initialView = location.hash.slice(1) || state.view || "today";
+const initialView = location.hash.slice(1) || (state.hobbyHome ? "hobbies" : state.view) || "today";
 setView(initialView, false);

@@ -45,6 +45,11 @@
             <span class="nav-icon" data-icon="calendar"></span>
             <span>Planner</span>
           </button>
+          <button class="nav-item" data-view="hobbies" type="button">
+            <span class="nav-icon" data-icon="palette"></span>
+            <span>Hobby studios</span>
+            <span class="new-pill">New</span>
+          </button>
           <button class="nav-item" data-view="inspiration" type="button">
             <span class="nav-icon" data-icon="sparkles"></span>
             <span>Inspiration</span>
@@ -226,6 +231,37 @@
             </div>
           </section>
 
+          <section class="view" id="view-hobbies" data-view-panel="hobbies">
+            <div class="page-intro page-intro-row hobby-intro">
+              <div>
+                <p class="eyebrow">Your creative practice, your way</p>
+                <h1>Choose a room to <em>make in.</em></h1>
+                <p class="intro-copy">Start with a thoughtful hobby template, then keep only the tools that support your rhythm.</p>
+              </div>
+              <div class="intro-actions">
+                <button class="secondary-button" id="customize-hobby" type="button"><span data-icon="sliders"></span>Customize studio</button>
+                <button class="primary-button" data-view-link="inspiration" type="button"><span data-icon="sparkles"></span>My library</button>
+              </div>
+            </div>
+
+            <div class="hobby-switcher" id="hobby-switcher" role="tablist" aria-label="Choose a hobby template">
+              <button class="hobby-tab is-active" data-hobby="art" role="tab" aria-selected="true" type="button">
+                <span class="hobby-tab-icon art-icon" data-icon="brush"></span>
+                <span><strong>Art studio</strong><small>Paint · draw · observe</small></span>
+              </button>
+              <button class="hobby-tab" data-hobby="writing" role="tab" aria-selected="false" type="button">
+                <span class="hobby-tab-icon writing-icon" data-icon="pen-line"></span>
+                <span><strong>Writing room</strong><small>Draft · journal · imagine</small></span>
+              </button>
+              <button class="hobby-tab" data-hobby="crochet" role="tab" aria-selected="false" type="button">
+                <span class="hobby-tab-icon crochet-icon" data-icon="yarn"></span>
+                <span><strong>Crochet corner</strong><small>Search · save · stitch</small></span>
+              </button>
+            </div>
+
+            <div class="hobby-content" id="hobby-content" role="tabpanel"></div>
+          </section>
+
           <section class="view" id="view-inspiration" data-view-panel="inspiration">
             <div class="page-intro page-intro-row inspiration-intro">
               <div>
@@ -294,7 +330,7 @@
       <button class="is-active" data-view="today" type="button"><span data-icon="sun"></span><small>Today</small></button>
       <button data-view="planner" type="button"><span data-icon="calendar"></span><small>Planner</small></button>
       <button class="mobile-add" data-open-event type="button" aria-label="Add a moment"><span data-icon="plus"></span></button>
-      <button data-view="inspiration" type="button"><span data-icon="sparkles"></span><small>Inspire</small></button>
+      <button data-view="hobbies" type="button"><span data-icon="palette"></span><small>Studios</small></button>
       <button data-view="notes" type="button"><span data-icon="notebook"></span><small>Notes</small></button>
     </nav>
 
@@ -411,6 +447,19 @@
         </div>
         <button class="primary-button full-width" data-close-modal type="button">Done</button>
       </div>
+    </dialog>
+
+    <dialog class="modal" id="hobby-settings-modal">
+      <form class="modal-card hobby-settings-card" id="hobby-settings-form" method="dialog">
+        <div class="modal-heading">
+          <div><p class="card-kicker">Shape the room</p><h2 id="hobby-settings-title">Customize art studio</h2></div>
+          <button class="icon-button subtle" data-close-modal type="button" aria-label="Close"><span data-icon="x"></span></button>
+        </div>
+        <p class="modal-intro">Turn sections on or off for this hobby. These choices are personal to this browser and can be changed anytime.</p>
+        <div class="module-options" id="hobby-settings-options"></div>
+        <label class="density-control home-studio-toggle"><span><strong>Open here first</strong><small>Make Hobby Studios your preferred starting space</small></span><input id="hobby-home-toggle" type="checkbox" /><i></i></label>
+        <div class="modal-actions"><button class="secondary-button" data-close-modal type="button">Cancel</button><button class="primary-button" type="submit">Save studio</button></div>
+      </form>
     </dialog>
 
     <div class="toast-region" id="toast-region" aria-live="polite"></div>
