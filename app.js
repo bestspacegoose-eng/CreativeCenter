@@ -81,6 +81,30 @@ function addDays(date, days) {
 const today = new Date();
 const todayISO = localISO(today);
 
+const adminPageMeta = {
+  today: { label: "Today", icon: "sun" },
+  planner: { label: "Planner", icon: "calendar" },
+  hobbies: { label: "Hobby studios", icon: "palette" },
+  inspiration: { label: "Inspiration", icon: "sparkles" },
+  notes: { label: "Notes", icon: "notebook" },
+};
+
+const defaultAdminConfig = {
+  brandName: "daylily",
+  homeView: "today",
+  order: ["today", "planner", "hobbies", "inspiration", "notes"],
+  hiddenViews: [],
+  navLabels: Object.fromEntries(Object.entries(adminPageMeta).map(([key, page]) => [key, page.label])),
+  appearance: { fontStyle: "editorial", cornerStyle: "soft", cardStyle: "elevated", contentWidth: "focused", highContrast: true, motion: true },
+  copy: {
+    today: { eyebrow: "", lead: "Make space for", accent: "what matters.", intro: "A gentle view of your day, with room for the ideas that find you." },
+    planner: { eyebrow: "Shape your time", lead: "The", accent: "weekly rhythm.", intro: "Move through the week one intentional moment at a time." },
+    hobbies: { eyebrow: "Your creative practice, your way", lead: "Choose a room to", accent: "make in.", intro: "Start with a thoughtful hobby template, then keep only the tools that support your rhythm." },
+    inspiration: { eyebrow: "Your visual garden", lead: "Gather what", accent: "moves you.", intro: "Collect references, connect ideas, and remember why you saved them." },
+    notes: { eyebrow: "A place for the words", lead: "Notes, threads &", accent: "tiny ideas.", intro: "Write loosely now. Organize only when it helps." },
+  },
+};
+
 const defaultState = {
   view: "today",
   selectedDate: todayISO,
@@ -90,6 +114,7 @@ const defaultState = {
   theme: "linen",
   customAccent: "",
   cozy: true,
+  adminConfig: structuredClone(defaultAdminConfig),
   profile: { name: "Jodie Rivera", email: "" },
   activeHobby: "art",
   hobbyHome: false,
@@ -129,6 +154,13 @@ function loadState() {
       ...structuredClone(defaultState),
       ...stored,
       profile: { ...defaultState.profile, ...(stored.profile || {}) },
+      adminConfig: {
+        ...structuredClone(defaultAdminConfig),
+        ...(stored.adminConfig || {}),
+        appearance: { ...defaultAdminConfig.appearance, ...(stored.adminConfig?.appearance || {}) },
+        navLabels: { ...defaultAdminConfig.navLabels, ...(stored.adminConfig?.navLabels || {}) },
+        copy: Object.fromEntries(Object.keys(adminPageMeta).map((key) => [key, { ...defaultAdminConfig.copy[key], ...(stored.adminConfig?.copy?.[key] || {}) }])),
+      },
       hobbyModules: {
         art: { ...defaultState.hobbyModules.art, ...(stored.hobbyModules?.art || {}) },
         writing: { ...defaultState.hobbyModules.writing, ...(stored.hobbyModules?.writing || {}) },
@@ -679,6 +711,101 @@ function mixHex(colorA, colorB, weight) {
   return `#${parts.map((part) => part.toString(16).padStart(2, "0")).join("")}`;
 }
 
+function validAdminOrder(order) {
+  const known = Object.keys(adminPageMeta);
+  const requested = Array.isArray(order) ? order.filter((key, index) => known.includes(key) && order.indexOf(key) === index) : [];
+  return [...requested, ...known.filter((key) => !requested.includes(key))];
+}
+
+function applyAdminConfig() {
+  const config = state.adminConfig;
+  config.order = validAdminOrder(config.order);
+  config.hiddenViews = Array.isArray(config.hiddenViews) ? config.hiddenViews.filter((key) => key in adminPageMeta) : [];
+  document.querySelector("#site-brand-name").textContent = config.brandName || defaultAdminConfig.brandName;
+  document.title = `${config.brandName || defaultAdminConfig.brandName} · Creative planning`;
+
+  Object.keys(adminPageMeta).forEach((key) => {
+    const copy = config.copy[key];
+    const eyebrow = document.querySelector(`#copy-${key}-eyebrow`);
+    const lead = document.querySelector(`#copy-${key}-lead`);
+    const accent = document.querySelector(`#copy-${key}-accent`);
+    const intro = document.querySelector(`#copy-${key}-intro`);
+    if (eyebrow) eyebrow.textContent = copy.eyebrow;
+    if (lead) lead.textContent = copy.lead;
+    if (accent) accent.textContent = copy.accent;
+    if (intro) intro.textContent = copy.intro;
+    document.querySelectorAll(`[data-nav-label="${key}"]`).forEach((label) => { label.textContent = config.navLabels[key] || adminPageMeta[key].label; });
+    document.querySelectorAll(`[data-view="${key}"]`).forEach((button) => { button.hidden = config.hiddenViews.includes(key); });
+  });
+
+  const nav = document.querySelector(".primary-nav");
+  config.order.forEach((key) => {
+    const button = nav.querySelector(`.nav-item[data-view="${key}"]`);
+    if (button) nav.append(button);
+  });
+
+  document.documentElement.dataset.fontStyle = config.appearance.fontStyle;
+  document.documentElement.dataset.cornerStyle = config.appearance.cornerStyle;
+  document.documentElement.dataset.cardStyle = config.appearance.cardStyle;
+  document.documentElement.dataset.contentWidth = config.appearance.contentWidth;
+  document.documentElement.dataset.highContrast = String(config.appearance.highContrast);
+  document.documentElement.dataset.motion = String(config.appearance.motion);
+}
+
+function adminCopyGroup(key) {
+  const page = adminPageMeta[key];
+  const copy = state.adminConfig.copy[key];
+  return `<details class="admin-copy-group" ${key === "today" ? "open" : ""}><summary><span class="admin-page-icon">${svgIcon(page.icon)}</span><span><strong>${escapeHTML(state.adminConfig.navLabels[key])}</strong><small>${escapeHTML(copy.lead)} ${escapeHTML(copy.accent)}</small></span>${svgIcon("chevron-right")}</summary><div class="admin-copy-fields">
+    <label class="admin-field"><span>Navigation label</span><input data-admin-nav-label="${key}" maxlength="24" value="${escapeHTML(state.adminConfig.navLabels[key])}" /></label>
+    ${key === "today" ? "" : `<label class="admin-field"><span>Eyebrow</span><input data-admin-copy="${key}.eyebrow" maxlength="60" value="${escapeHTML(copy.eyebrow)}" /></label>`}
+    <label class="admin-field"><span>Headline</span><input data-admin-copy="${key}.lead" maxlength="70" value="${escapeHTML(copy.lead)}" /></label>
+    <label class="admin-field"><span>Highlighted words</span><input data-admin-copy="${key}.accent" maxlength="45" value="${escapeHTML(copy.accent)}" /></label>
+    <label class="admin-field full"><span>Supporting introduction</span><textarea data-admin-copy="${key}.intro" rows="2" maxlength="220">${escapeHTML(copy.intro)}</textarea></label>
+    <button class="text-button" data-preview-view="${key}" type="button">Preview this page ${svgIcon("arrow-right")}</button>
+  </div></details>`;
+}
+
+function renderAdminEditor() {
+  const config = state.adminConfig;
+  document.querySelector('#admin-copy-form [name="brandName"]').value = config.brandName;
+  document.querySelector("#admin-copy-groups").innerHTML = config.order.map(adminCopyGroup).join("");
+  document.querySelector("#admin-home-view").innerHTML = config.order.filter((key) => !config.hiddenViews.includes(key)).map((key) => `<option value="${key}" ${key === config.homeView ? "selected" : ""}>${escapeHTML(config.navLabels[key])}</option>`).join("");
+  document.querySelector("#admin-view-list").innerHTML = config.order.map((key, index) => `<article class="admin-view-row ${config.hiddenViews.includes(key) ? "is-hidden" : ""}"><span class="admin-page-icon">${svgIcon(adminPageMeta[key].icon)}</span><span><strong>${escapeHTML(config.navLabels[key])}</strong><small>${key === config.homeView ? "Starting page" : `/${key}`}</small></span><label class="admin-visibility"><input type="checkbox" data-admin-view-visible="${key}" ${config.hiddenViews.includes(key) ? "" : "checked"} /><i></i><span>${config.hiddenViews.includes(key) ? "Hidden" : "Visible"}</span></label><div class="admin-reorder"><button type="button" data-admin-move="${key}" data-direction="up" aria-label="Move ${escapeHTML(config.navLabels[key])} up" ${index === 0 ? "disabled" : ""}>${svgIcon("arrow-right")}</button><button type="button" data-admin-move="${key}" data-direction="down" aria-label="Move ${escapeHTML(config.navLabels[key])} down" ${index === config.order.length - 1 ? "disabled" : ""}>${svgIcon("arrow-right")}</button></div></article>`).join("");
+  document.querySelector("#admin-font-style").value = config.appearance.fontStyle;
+  document.querySelector("#admin-corner-style").value = config.appearance.cornerStyle;
+  document.querySelector("#admin-card-style").value = config.appearance.cardStyle;
+  document.querySelector("#admin-content-width").value = config.appearance.contentWidth;
+  document.querySelector("#admin-high-contrast").checked = config.appearance.highContrast;
+  document.querySelector("#admin-motion").checked = config.appearance.motion;
+  document.querySelector("#admin-cozy").checked = state.cozy;
+  hydrateIcons(document.querySelector("#view-admin"));
+}
+
+function saveAdminChange(message = "Configuration saved locally") {
+  applyAdminConfig();
+  persist();
+  const status = document.querySelector("#admin-change-status");
+  if (status) status.textContent = message;
+}
+
+function sanitizeImportedAdminConfig(input) {
+  if (!input || typeof input !== "object") throw new Error("Invalid configuration file");
+  const clean = structuredClone(defaultAdminConfig);
+  clean.brandName = String(input.brandName || clean.brandName).slice(0, 32);
+  clean.order = validAdminOrder(input.order);
+  clean.hiddenViews = Array.isArray(input.hiddenViews) ? input.hiddenViews.filter((key) => key in adminPageMeta) : [];
+  clean.homeView = clean.order.includes(input.homeView) && !clean.hiddenViews.includes(input.homeView) ? input.homeView : clean.order.find((key) => !clean.hiddenViews.includes(key)) || "today";
+  Object.keys(adminPageMeta).forEach((key) => {
+    clean.navLabels[key] = String(input.navLabels?.[key] || clean.navLabels[key]).slice(0, 24);
+    Object.keys(clean.copy[key]).forEach((field) => { clean.copy[key][field] = String(input.copy?.[key]?.[field] ?? clean.copy[key][field]).slice(0, field === "intro" ? 220 : 70); });
+  });
+  const allowed = { fontStyle: ["editorial", "modern", "classic"], cornerStyle: ["soft", "moderate", "square"], cardStyle: ["elevated", "outlined", "flat"], contentWidth: ["focused", "wide", "full"] };
+  Object.entries(allowed).forEach(([field, values]) => { if (values.includes(input.appearance?.[field])) clean.appearance[field] = input.appearance[field]; });
+  clean.appearance.highContrast = input.appearance?.highContrast !== false;
+  clean.appearance.motion = input.appearance?.motion !== false;
+  return clean;
+}
+
 function renderAll() {
   document.querySelector("#today-date").textContent = today.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
   document.querySelector("#focus-input").value = state.focus;
@@ -694,11 +821,15 @@ function renderAll() {
   renderNoteEditor();
   renderProfile();
   applyTheme();
+  applyAdminConfig();
+  renderAdminEditor();
   hydrateIcons();
 }
 
 function setView(view, updateHash = true) {
-  const validView = ["today", "planner", "hobbies", "inspiration", "notes"].includes(view) ? view : "today";
+  const allowedViews = [...Object.keys(adminPageMeta), "admin"];
+  let validView = allowedViews.includes(view) ? view : state.adminConfig.homeView;
+  if (validView !== "admin" && state.adminConfig.hiddenViews.includes(validView)) validView = state.adminConfig.order.find((key) => !state.adminConfig.hiddenViews.includes(key)) || "admin";
   state.view = validView;
   document.querySelectorAll("[data-view-panel]").forEach((panel) => panel.classList.toggle("is-active", panel.dataset.viewPanel === validView));
   document.querySelectorAll("[data-view]").forEach((button) => button.classList.toggle("is-active", button.dataset.view === validView));
@@ -1282,6 +1413,134 @@ document.querySelector("#cozy-density").addEventListener("change", (event) => {
   persist();
 });
 
+document.querySelectorAll("[data-admin-section]").forEach((button) => button.addEventListener("click", () => {
+  document.querySelectorAll("[data-admin-section]").forEach((item) => item.classList.toggle("is-active", item === button));
+  document.querySelectorAll("[data-admin-panel]").forEach((panel) => panel.classList.toggle("is-active", panel.dataset.adminPanel === button.dataset.adminSection));
+}));
+
+document.querySelector("#admin-copy-form").addEventListener("input", (event) => {
+  const target = event.target;
+  if (target.name === "brandName") state.adminConfig.brandName = target.value.slice(0, 32);
+  if (target.dataset.adminNavLabel) state.adminConfig.navLabels[target.dataset.adminNavLabel] = target.value.slice(0, 24) || adminPageMeta[target.dataset.adminNavLabel].label;
+  if (target.dataset.adminCopy) {
+    const [page, field] = target.dataset.adminCopy.split(".");
+    state.adminConfig.copy[page][field] = target.value;
+  }
+  saveAdminChange("Live changes saved");
+});
+
+document.querySelector("#admin-home-view").addEventListener("change", (event) => {
+  state.adminConfig.homeView = event.target.value;
+  saveAdminChange("Starting page updated");
+  renderAdminEditor();
+});
+
+document.querySelector("#admin-view-list").addEventListener("change", (event) => {
+  const key = event.target.dataset.adminViewVisible;
+  if (!key) return;
+  const hidden = new Set(state.adminConfig.hiddenViews);
+  event.target.checked ? hidden.delete(key) : hidden.add(key);
+  if (hidden.size === Object.keys(adminPageMeta).length) {
+    event.target.checked = true;
+    toast("Keep at least one visitor page visible");
+    return;
+  }
+  state.adminConfig.hiddenViews = [...hidden];
+  if (hidden.has(state.adminConfig.homeView)) state.adminConfig.homeView = state.adminConfig.order.find((item) => !hidden.has(item));
+  saveAdminChange(`${state.adminConfig.navLabels[key]} ${hidden.has(key) ? "hidden" : "published"}`);
+  renderAdminEditor();
+});
+
+document.querySelector("#admin-view-list").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-admin-move]");
+  if (!button) return;
+  const index = state.adminConfig.order.indexOf(button.dataset.adminMove);
+  const nextIndex = button.dataset.direction === "up" ? index - 1 : index + 1;
+  if (index < 0 || nextIndex < 0 || nextIndex >= state.adminConfig.order.length) return;
+  [state.adminConfig.order[index], state.adminConfig.order[nextIndex]] = [state.adminConfig.order[nextIndex], state.adminConfig.order[index]];
+  saveAdminChange("Navigation order updated");
+  renderAdminEditor();
+});
+
+const adminAppearanceControls = {
+  "#admin-font-style": "fontStyle",
+  "#admin-corner-style": "cornerStyle",
+  "#admin-card-style": "cardStyle",
+  "#admin-content-width": "contentWidth",
+};
+
+Object.entries(adminAppearanceControls).forEach(([selector, field]) => document.querySelector(selector).addEventListener("change", (event) => {
+  state.adminConfig.appearance[field] = event.target.value;
+  saveAdminChange("Appearance updated");
+}));
+
+document.querySelector("#admin-high-contrast").addEventListener("change", (event) => {
+  state.adminConfig.appearance.highContrast = event.target.checked;
+  saveAdminChange("Color contrast updated");
+});
+
+document.querySelector("#admin-motion").addEventListener("change", (event) => {
+  state.adminConfig.appearance.motion = event.target.checked;
+  saveAdminChange("Motion preference updated");
+});
+
+document.querySelector("#admin-cozy").addEventListener("change", (event) => {
+  state.cozy = event.target.checked;
+  applyTheme();
+  saveAdminChange("Spacing updated");
+});
+
+document.querySelector("#open-palette-from-admin").addEventListener("click", openThemeDrawer);
+
+document.addEventListener("click", (event) => {
+  const preview = event.target.closest("[data-preview-view]");
+  if (preview) setView(preview.dataset.previewView);
+});
+
+document.querySelector("#export-site-config").addEventListener("click", () => {
+  const payload = { schema: "daylily-site-config", version: 1, exportedAt: new Date().toISOString(), config: state.adminConfig, cozy: state.cozy, theme: state.theme, customAccent: state.customAccent };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${(state.adminConfig.brandName || "daylily").toLowerCase().replace(/[^a-z0-9]+/g, "-")}-site-settings.json`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  toast("Site configuration downloaded");
+});
+
+document.querySelector("#import-site-config").addEventListener("click", () => document.querySelector("#site-config-file").click());
+document.querySelector("#site-config-file").addEventListener("change", async (event) => {
+  const [file] = event.target.files;
+  if (!file) return;
+  try {
+    const payload = JSON.parse(await file.text());
+    if (payload.schema !== "daylily-site-config") throw new Error("Not a Daylily site configuration");
+    state.adminConfig = sanitizeImportedAdminConfig(payload.config);
+    if (typeof payload.cozy === "boolean") state.cozy = payload.cozy;
+    if (["linen", "coastal", "matcha", "lilac", "terracotta", "nightfall"].includes(payload.theme)) state.theme = payload.theme;
+    state.customAccent = /^#[0-9a-f]{6}$/i.test(payload.customAccent || "") ? payload.customAccent : "";
+    renderAll();
+    persist();
+    toast("Site configuration imported");
+  } catch (error) {
+    toast(error.message || "That configuration could not be imported");
+  } finally {
+    event.target.value = "";
+  }
+});
+
+document.querySelector("#reset-site-config").addEventListener("click", () => {
+  if (!window.confirm("Reset the site copy, navigation, and appearance? Your planner, notes, and inspiration will stay intact.")) return;
+  state.adminConfig = structuredClone(defaultAdminConfig);
+  state.cozy = true;
+  renderAll();
+  persist();
+  toast("Site design restored to defaults");
+});
+
 document.querySelector("#open-account").addEventListener("click", () => openDialog("#account-modal"));
 ["#open-integrations", "#connect-pinterest", "#source-connect-pinterest", "#calendar-help"].forEach((selector) => document.querySelector(selector).addEventListener("click", () => openDialog("#integrations-modal")));
 
@@ -1332,5 +1591,5 @@ document.querySelectorAll("dialog").forEach((dialog) => dialog.addEventListener(
 }));
 
 renderAll();
-const initialView = location.hash.slice(1) || (state.hobbyHome ? "hobbies" : state.view) || "today";
+const initialView = location.hash.slice(1) || (state.hobbyHome ? "hobbies" : state.adminConfig.homeView) || "today";
 setView(initialView, false);

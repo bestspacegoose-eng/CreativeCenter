@@ -32,33 +32,33 @@
               <circle cx="17.8" cy="17.2" r="4.6" />
             </svg>
           </span>
-          <span>daylily</span>
+          <span id="site-brand-name">daylily</span>
         </a>
 
         <nav class="primary-nav">
           <p class="nav-label">Workspace</p>
           <button class="nav-item is-active" data-view="today" type="button">
             <span class="nav-icon" data-icon="sun"></span>
-            <span>Today</span>
+            <span data-nav-label="today">Today</span>
             <span class="nav-dot" aria-hidden="true"></span>
           </button>
           <button class="nav-item" data-view="planner" type="button">
             <span class="nav-icon" data-icon="calendar"></span>
-            <span>Planner</span>
+            <span data-nav-label="planner">Planner</span>
           </button>
           <button class="nav-item" data-view="hobbies" type="button">
             <span class="nav-icon" data-icon="palette"></span>
-            <span>Hobby studios</span>
+            <span data-nav-label="hobbies">Hobby studios</span>
             <span class="new-pill">New</span>
           </button>
           <button class="nav-item" data-view="inspiration" type="button">
             <span class="nav-icon" data-icon="sparkles"></span>
-            <span>Inspiration</span>
+            <span data-nav-label="inspiration">Inspiration</span>
             <span class="nav-count" id="inspiration-count">6</span>
           </button>
           <button class="nav-item" data-view="notes" type="button">
             <span class="nav-icon" data-icon="notebook"></span>
-            <span>Notes</span>
+            <span data-nav-label="notes">Notes</span>
           </button>
         </nav>
 
@@ -73,6 +73,11 @@
           <button class="nav-item" id="open-integrations" type="button">
             <span class="nav-icon" data-icon="link"></span>
             <span>Integrations</span>
+          </button>
+          <button class="nav-item admin-nav-item" data-view="admin" type="button">
+            <span class="nav-icon" data-icon="sliders"></span>
+            <span>Site editor</span>
+            <span class="admin-pill">Admin</span>
           </button>
           <button class="profile-button" id="open-account" type="button" aria-label="Open account settings">
             <span class="avatar" id="profile-avatar">JR</span>
@@ -117,8 +122,8 @@
             <div class="page-intro today-intro">
               <div>
                 <p class="eyebrow" id="today-date">Friday, August 28</p>
-                <h1>Make space for <em>what matters.</em></h1>
-                <p class="intro-copy">A gentle view of your day, with room for the ideas that find you.</p>
+                <h1><span id="copy-today-lead">Make space for</span> <em id="copy-today-accent">what matters.</em></h1>
+                <p class="intro-copy" id="copy-today-intro">A gentle view of your day, with room for the ideas that find you.</p>
               </div>
               <div class="day-progress" aria-label="Daily progress">
                 <div class="progress-ring" id="progress-ring"><span id="progress-number">60%</span></div>
@@ -192,9 +197,9 @@
           <section class="view" id="view-planner" data-view-panel="planner">
             <div class="page-intro page-intro-row">
               <div>
-                <p class="eyebrow">Shape your time</p>
-                <h1>The <em>weekly rhythm.</em></h1>
-                <p class="intro-copy">Move through the week one intentional moment at a time.</p>
+                <p class="eyebrow" id="copy-planner-eyebrow">Shape your time</p>
+                <h1><span id="copy-planner-lead">The</span> <em id="copy-planner-accent">weekly rhythm.</em></h1>
+                <p class="intro-copy" id="copy-planner-intro">Move through the week one intentional moment at a time.</p>
               </div>
               <button class="primary-button" data-open-event type="button"><span data-icon="plus"></span>New moment</button>
             </div>
@@ -235,9 +240,9 @@
           <section class="view" id="view-hobbies" data-view-panel="hobbies">
             <div class="page-intro page-intro-row hobby-intro">
               <div>
-                <p class="eyebrow">Your creative practice, your way</p>
-                <h1>Choose a room to <em>make in.</em></h1>
-                <p class="intro-copy">Start with a thoughtful hobby template, then keep only the tools that support your rhythm.</p>
+                <p class="eyebrow" id="copy-hobbies-eyebrow">Your creative practice, your way</p>
+                <h1><span id="copy-hobbies-lead">Choose a room to</span> <em id="copy-hobbies-accent">make in.</em></h1>
+                <p class="intro-copy" id="copy-hobbies-intro">Start with a thoughtful hobby template, then keep only the tools that support your rhythm.</p>
               </div>
               <div class="intro-actions">
                 <button class="secondary-button" id="customize-hobby" type="button"><span data-icon="sliders"></span>Customize studio</button>
@@ -266,9 +271,9 @@
           <section class="view" id="view-inspiration" data-view-panel="inspiration">
             <div class="page-intro page-intro-row inspiration-intro">
               <div>
-                <p class="eyebrow">Your visual garden</p>
-                <h1>Gather what <em>moves you.</em></h1>
-                <p class="intro-copy">Collect references, connect ideas, and remember why you saved them.</p>
+                <p class="eyebrow" id="copy-inspiration-eyebrow">Your visual garden</p>
+                <h1><span id="copy-inspiration-lead">Gather what</span> <em id="copy-inspiration-accent">moves you.</em></h1>
+                <p class="intro-copy" id="copy-inspiration-intro">Collect references, connect ideas, and remember why you saved them.</p>
               </div>
               <div class="intro-actions">
                 <button class="secondary-button" id="connect-pinterest" type="button"><span data-icon="pinterest"></span>Connect Pinterest</button>
@@ -300,9 +305,9 @@
           <section class="view" id="view-notes" data-view-panel="notes">
             <div class="page-intro page-intro-row notes-intro">
               <div>
-                <p class="eyebrow">A place for the words</p>
-                <h1>Notes, threads &amp; <em>tiny ideas.</em></h1>
-                <p class="intro-copy">Write loosely now. Organize only when it helps.</p>
+                <p class="eyebrow" id="copy-notes-eyebrow">A place for the words</p>
+                <h1><span id="copy-notes-lead">Notes, threads &amp;</span> <em id="copy-notes-accent">tiny ideas.</em></h1>
+                <p class="intro-copy" id="copy-notes-intro">Write loosely now. Organize only when it helps.</p>
               </div>
               <button class="primary-button" id="new-note" type="button"><span data-icon="plus"></span>New note</button>
             </div>
@@ -321,6 +326,68 @@
                 <input id="note-tags" class="note-tags-input" aria-label="Note tags" placeholder="Add tags, separated by commas" />
                 <textarea id="note-body" class="note-body-input" aria-label="Note body" placeholder="Start with a feeling, a fragment, or a question…"></textarea>
               </article>
+            </div>
+          </section>
+
+          <section class="view" id="view-admin" data-view-panel="admin">
+            <div class="page-intro page-intro-row admin-intro">
+              <div>
+                <p class="eyebrow">Local owner tools</p>
+                <h1>Shape the site <em>without code.</em></h1>
+                <p class="intro-copy">Edit public-facing copy, navigation, and presentation here. Changes preview immediately and stay in this browser until you export them.</p>
+              </div>
+              <div class="admin-status-card"><span class="save-state"><span></span>Live preview</span><strong id="admin-change-status">Configuration saved locally</strong></div>
+            </div>
+
+            <div class="admin-shell">
+              <aside class="admin-section-nav card" aria-label="Site editor sections">
+                <p class="card-kicker">Edit the experience</p>
+                <button class="is-active" data-admin-section="identity" type="button"><span data-icon="edit"></span><span><strong>Identity &amp; copy</strong><small>Brand and page introductions</small></span></button>
+                <button data-admin-section="navigation" type="button"><span data-icon="layers"></span><span><strong>Navigation</strong><small>Labels, visibility, and order</small></span></button>
+                <button data-admin-section="appearance" type="button"><span data-icon="palette"></span><span><strong>Appearance</strong><small>Type, corners, cards, and motion</small></span></button>
+                <button data-admin-section="publish" type="button"><span data-icon="download"></span><span><strong>Export &amp; restore</strong><small>Move settings between browsers</small></span></button>
+                <div class="admin-boundary"><span data-icon="shield"></span><p><strong>Local editor</strong>This panel is convenient, not a secure login. GitHub Pages cannot protect admin controls without an authentication backend.</p></div>
+              </aside>
+
+              <div class="admin-editor card">
+                <section class="admin-panel is-active" data-admin-panel="identity">
+                  <div class="admin-panel-heading"><div><p class="card-kicker">Identity &amp; copy</p><h2>Make every page sound like you</h2></div><button class="secondary-button" data-preview-view="today" type="button">Preview Today <span data-icon="arrow-up-right"></span></button></div>
+                  <form id="admin-copy-form" class="admin-form">
+                    <label class="admin-field full"><span>Website name</span><input name="brandName" maxlength="32" /></label>
+                    <div id="admin-copy-groups" class="admin-copy-groups"></div>
+                  </form>
+                </section>
+
+                <section class="admin-panel" data-admin-panel="navigation">
+                  <div class="admin-panel-heading"><div><p class="card-kicker">Navigation</p><h2>Choose what visitors can reach</h2></div><label class="admin-field compact"><span>Starting page</span><select id="admin-home-view"></select></label></div>
+                  <p class="admin-help">Rename pages, hide unfinished sections, or move them up and down. The Site Editor remains available to the owner.</p>
+                  <div class="admin-view-list" id="admin-view-list"></div>
+                </section>
+
+                <section class="admin-panel" data-admin-panel="appearance">
+                  <div class="admin-panel-heading"><div><p class="card-kicker">Appearance</p><h2>Set the visual personality</h2></div><button class="secondary-button" id="open-palette-from-admin" type="button"><span data-icon="palette"></span>Open palettes</button></div>
+                  <div class="admin-control-grid">
+                    <label class="admin-field"><span>Heading style</span><select id="admin-font-style"><option value="editorial">Editorial serif</option><option value="modern">Modern sans</option><option value="classic">Classic book</option></select></label>
+                    <label class="admin-field"><span>Corner style</span><select id="admin-corner-style"><option value="soft">Soft &amp; rounded</option><option value="moderate">Moderate</option><option value="square">Nearly square</option></select></label>
+                    <label class="admin-field"><span>Card treatment</span><select id="admin-card-style"><option value="elevated">Elevated</option><option value="outlined">Outlined</option><option value="flat">Flat</option></select></label>
+                    <label class="admin-field"><span>Content width</span><select id="admin-content-width"><option value="focused">Focused</option><option value="wide">Wide</option><option value="full">Full canvas</option></select></label>
+                  </div>
+                  <div class="admin-toggle-list">
+                    <label class="admin-toggle"><span><strong>High color contrast</strong><small>Use the full theme palette across sections</small></span><input id="admin-high-contrast" type="checkbox" /><i></i></label>
+                    <label class="admin-toggle"><span><strong>Interface motion</strong><small>Keep page and hover transitions enabled</small></span><input id="admin-motion" type="checkbox" /><i></i></label>
+                    <label class="admin-toggle"><span><strong>Cozy spacing</strong><small>Give cards and sections more breathing room</small></span><input id="admin-cozy" type="checkbox" /><i></i></label>
+                  </div>
+                </section>
+
+                <section class="admin-panel" data-admin-panel="publish">
+                  <div class="admin-panel-heading"><div><p class="card-kicker">Export &amp; restore</p><h2>Carry your design settings</h2></div></div>
+                  <div class="admin-transfer-grid">
+                    <article><span class="admin-transfer-icon" data-icon="download"></span><h3>Export configuration</h3><p>Download one JSON file containing site copy, navigation, and presentation settings.</p><button class="primary-button" id="export-site-config" type="button">Download settings</button></article>
+                    <article><span class="admin-transfer-icon" data-icon="folder"></span><h3>Import configuration</h3><p>Restore a previously exported Daylily configuration on this browser.</p><button class="secondary-button" id="import-site-config" type="button">Choose JSON file</button><input class="sr-only" id="site-config-file" type="file" accept="application/json,.json" /></article>
+                  </div>
+                  <div class="admin-danger-zone"><div><strong>Restore editor defaults</strong><p>Reset only the site design and copy settings. Your planner, notes, and inspiration remain untouched.</p></div><button class="secondary-button danger-button" id="reset-site-config" type="button">Reset site design</button></div>
+                </section>
+              </div>
             </div>
           </section>
         </div>

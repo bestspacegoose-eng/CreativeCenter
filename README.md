@@ -11,6 +11,7 @@ Daylily is a calm, local-first creative planning prototype designed to run direc
 - Customizable Art, Writing, and Crochet Hobby Studios with per-studio modules
 - Cited photo references, writing/journaling prompts, and project-planning actions
 - One-page crochet search across four pattern libraries with category/source filters
+- Local Site Editor for copy, navigation, layout presets, and portable configuration files
 - Notes, quick capture, search, profile preferences, and six global themes
 - Custom accent colors, compact/cozy spacing, responsive mobile navigation
 - All user-entered content is escaped before it is rendered
@@ -65,6 +66,18 @@ The **Hobby Studios** view includes three customizable rooms:
 - **Crochet Corner** — one search interface for Ravelry, Yarnspirations, LoveCrafts, and AllFreeCrochet; results share one grid and can be filtered by category and source.
 
 The crochet search ships with a curated, clickable cross-site catalog so it works on GitHub Pages today. `config.js` can point it at a live serverless aggregator without changing the interface. See [Unified crochet pattern search backend](docs/PATTERN_SEARCH_BACKEND.md) for the API contract, security boundaries, and rollout plan.
+
+## Local Site Editor
+
+Open **Site editor** near the bottom of the desktop sidebar. It provides owner-friendly controls for:
+
+- Website name and page-introduction copy with immediate preview
+- Navigation labels, visibility, order, and starting page
+- Heading style, corner style, card treatment, content width, color contrast, motion, and spacing
+- Exporting and importing a versioned JSON configuration
+- Resetting site design without deleting planner events, notes, or inspiration
+
+The editor stores configuration in the current browser. Export the JSON file to move those settings to another browser or keep a design backup. This is intentionally a local owner tool, not secure administration: static GitHub Pages cannot authenticate an admin or prevent visitors from opening client-side controls. A secure public admin requires a real authentication and database layer.
 
 Google Calendar does not require account linking for the current flow: Daylily opens Google's standard event-creation URL. Apple Calendar receives an interoperable iCalendar file, which also works with many other calendar clients. If two-way calendar sync is needed later, add Google OAuth and CalDAV-compatible server integration separately.
 
