@@ -74,10 +74,12 @@ Open **Site editor** near the bottom of the desktop sidebar. It provides owner-f
 - Website name and page-introduction copy with immediate preview
 - Navigation labels, visibility, order, and starting page
 - Heading style, corner style, card treatment, content width, color contrast, motion, and spacing
+- A visual selection mode for moving, resizing, recoloring, aligning, and reshaping individual containers and text
+- In-place editing for eligible plain-text elements, with per-element reset controls
 - Exporting and importing a versioned JSON configuration
 - Resetting site design without deleting planner events, notes, or inspiration
 
-The editor stores configuration in the current browser. Export the JSON file to move those settings to another browser or keep a design backup. This is intentionally a local owner tool, not secure administration: static GitHub Pages cannot authenticate an admin or prevent visitors from opening client-side controls. A secure public admin requires a real authentication and database layer.
+The editor stores configuration, including individual element overrides, in the current browser. Export the JSON file to move those settings to another browser or keep a design backup. This is intentionally a local owner tool, not secure administration: static GitHub Pages cannot authenticate an admin or prevent visitors from opening client-side controls. A secure public admin requires a real authentication and database layer.
 
 Google Calendar does not require account linking for the current flow: Daylily opens Google's standard event-creation URL. Apple Calendar receives an interoperable iCalendar file, which also works with many other calendar clients. If two-way calendar sync is needed later, add Google OAuth and CalDAV-compatible server integration separately.
 

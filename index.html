@@ -366,6 +366,11 @@
 
                 <section class="admin-panel" data-admin-panel="appearance">
                   <div class="admin-panel-heading"><div><p class="card-kicker">Appearance</p><h2>Set the visual personality</h2></div><button class="secondary-button" id="open-palette-from-admin" type="button"><span data-icon="palette"></span>Open palettes</button></div>
+                  <div class="visual-editor-launch">
+                    <span class="admin-transfer-icon" data-icon="sliders"></span>
+                    <div><strong>Visual selection mode</strong><p>Browse the site, select individual containers or text, and adjust them with a live inspector.</p></div>
+                    <button class="primary-button" id="toggle-visual-editor" type="button">Start visual editing</button>
+                  </div>
                   <div class="admin-control-grid">
                     <label class="admin-field"><span>Heading style</span><select id="admin-font-style"><option value="editorial">Editorial serif</option><option value="modern">Modern sans</option><option value="classic">Classic book</option></select></label>
                     <label class="admin-field"><span>Corner style</span><select id="admin-corner-style"><option value="soft">Soft &amp; rounded</option><option value="moderate">Moderate</option><option value="square">Nearly square</option></select></label>
@@ -422,6 +427,33 @@
       </div>
       <label class="density-control"><span><strong>Cozy spacing</strong><small>Give ideas a little more air</small></span><input id="cozy-density" type="checkbox" checked /><i></i></label>
     </aside>
+    <aside class="visual-editor-inspector" id="visual-editor-inspector" aria-hidden="true" aria-label="Visual element inspector" inert>
+      <div class="drawer-heading">
+        <div><p class="card-kicker">Visual editor</p><h2>Element inspector</h2></div>
+        <button class="icon-button subtle" id="close-visual-editor" type="button" aria-label="Exit visual editing"><span data-icon="x"></span></button>
+      </div>
+      <div class="visual-editor-empty" id="visual-editor-empty"><span data-icon="sliders"></span><strong>Select something on the page</strong><p>Hover over a container or text element, then click it to edit its presentation.</p></div>
+      <form class="visual-inspector-form" id="visual-inspector-form" hidden>
+        <div class="selected-element-summary"><span class="admin-page-icon" data-icon="layers"></span><span><strong id="selected-element-name">Selected element</strong><small id="selected-element-path">Page container</small></span></div>
+        <label class="admin-field full" id="visual-text-field"><span>Text content</span><textarea id="visual-text-content" rows="3" maxlength="500"></textarea></label>
+        <div class="visual-control-grid">
+          <label class="admin-field"><span>Alignment</span><select id="visual-text-align"><option value="">Inherit</option><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
+          <label class="admin-field"><span>Width</span><select id="visual-width"><option value="">Automatic</option><option value="50%">50%</option><option value="66%">66%</option><option value="75%">75%</option><option value="100%">100%</option></select></label>
+          <label class="admin-field"><span>Move horizontally</span><input id="visual-offset-x" type="number" min="-240" max="240" step="4" value="0" /></label>
+          <label class="admin-field"><span>Move vertically</span><input id="visual-offset-y" type="number" min="-240" max="240" step="4" value="0" /></label>
+          <label class="admin-field"><span>Inner spacing</span><input id="visual-padding" type="number" min="0" max="100" step="2" placeholder="Inherit" /></label>
+          <label class="admin-field"><span>Corner radius</span><input id="visual-radius" type="number" min="0" max="80" step="2" placeholder="Inherit" /></label>
+        </div>
+        <div class="visual-color-grid">
+          <label><span>Background</span><input id="visual-background" type="color" value="#ffffff" /><button data-clear-style="background" type="button">Clear</button></label>
+          <label><span>Text</span><input id="visual-text-color" type="color" value="#282a25" /><button data-clear-style="color" type="button">Clear</button></label>
+          <label><span>Border</span><input id="visual-border-color" type="color" value="#d8d4cb" /><button data-clear-style="borderColor" type="button">Clear</button></label>
+        </div>
+        <div class="visual-layer-actions"><button class="secondary-button" id="visual-reset-element" type="button">Reset element</button><button class="primary-button" id="visual-finish-selection" type="button">Done selecting</button></div>
+      </form>
+      <div class="visual-editor-footer"><span><i></i>Visual editing is on</span><button class="text-button" id="visual-return-admin" type="button">Return to Site Editor</button></div>
+    </aside>
+    <div class="visual-editor-badge" id="visual-editor-badge" hidden><span></span>Visual editing<button type="button" id="visual-editor-badge-exit">Exit</button></div>
     <div class="drawer-scrim" id="drawer-scrim"></div>
 
     <dialog class="modal" id="event-modal">

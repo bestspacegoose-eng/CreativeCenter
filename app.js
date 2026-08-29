@@ -96,6 +96,7 @@ const defaultAdminConfig = {
   hiddenViews: [],
   navLabels: Object.fromEntries(Object.entries(adminPageMeta).map(([key, page]) => [key, page.label])),
   appearance: { fontStyle: "editorial", cornerStyle: "soft", cardStyle: "elevated", contentWidth: "focused", highContrast: true, motion: true },
+  elementStyles: {},
   copy: {
     today: { eyebrow: "", lead: "Make space for", accent: "what matters.", intro: "A gentle view of your day, with room for the ideas that find you." },
     planner: { eyebrow: "Shape your time", lead: "The", accent: "weekly rhythm.", intro: "Move through the week one intentional moment at a time." },
@@ -160,6 +161,7 @@ function loadState() {
         appearance: { ...defaultAdminConfig.appearance, ...(stored.adminConfig?.appearance || {}) },
         navLabels: { ...defaultAdminConfig.navLabels, ...(stored.adminConfig?.navLabels || {}) },
         copy: Object.fromEntries(Object.keys(adminPageMeta).map((key) => [key, { ...defaultAdminConfig.copy[key], ...(stored.adminConfig?.copy?.[key] || {}) }])),
+        elementStyles: stored.adminConfig?.elementStyles && typeof stored.adminConfig.elementStyles === "object" ? stored.adminConfig.elementStyles : {},
       },
       hobbyModules: {
         art: { ...defaultState.hobbyModules.art, ...(stored.hobbyModules?.art || {}) },
@@ -192,6 +194,8 @@ let crochetSourceFilter = "all";
 let liveCrochetResults = [];
 let crochetSearchStatus = "curated";
 let saveTimer;
+let visualEditorActive = false;
+let selectedEditorKey = "";
 
 const artReferences = [
   {
@@ -265,7 +269,18 @@ const crochetPatternIndex = [
   { id: "yarn-lace", title: "On the Lace Crochet Cardigan", source: "Yarnspirations", designer: "Bernat", categories: ["lace", "jackets", "blouses"], difficulty: "Intermediate", url: "https://www.yarnspirations.com/products/bernat-on-the-lace-crochet-cardigan", description: "A bright lacy cardigan designed to layer over dresses or denim." },
   { id: "yarn-nordic", title: "Nordic Crochet Hat", source: "Yarnspirations", designer: "Patons", categories: ["hats"], difficulty: "Intermediate", url: "https://www.yarnspirations.com/en-row/products/patons-nordic-crochet-hat", description: "A colorwork winter hat using split single crochet and wool yarn." },
   { id: "love-woven", title: "Woven Stitch Hat & Scarf", source: "LoveCrafts", designer: "Red Heart US", categories: ["hats", "scarves"], difficulty: "Easy", url: "https://www.lovecrafts.com/en-us/p/woven-stitch-hat-scarf-in-red-heart-with-love-multis-lw3319", description: "A free downloadable two-pattern set using a textured woven stitch." },
-  { id: "love-free", title: "LoveCrafts Free Crochet Collection", source: "LoveCrafts", designer: "Multiple designers", categories: ["scarves", "hats", "lace", "shirts", "blouses", "jackets", "amigurumi"], difficulty: "All levels", url: "https://www.lovecrafts.com/en-us/l/crochet/crochet-patterns/free-crochet-patterns", description: "Thousands of free PDFs with project, yarn weight, difficulty, and technique filters." },
+  { id: "love-americana", title: "Americana Hat & Scarf", source: "LoveCrafts", designer: "Lion Brand", categories: ["hats", "scarves"], difficulty: "Easy", url: "https://www.lovecrafts.com/en-us/p/americana-hat-scarf-in-lion-brand-wool-ease", description: "A free two-piece hat and scarf PDF worked with warm worsted-weight yarn." },
+  { id: "love-boston-hat", title: "Crocheted Hat in Schachenmayr Boston", source: "LoveCrafts", designer: "Schachenmayr", categories: ["hats"], difficulty: "Easy", url: "https://www.lovecrafts.com/en-us/p/crocheted-hat-in-schachenmayr-boston-3883-downloadable-pdf", description: "A quick bulky-yarn hat with a pompom and multilingual instructions." },
+  { id: "love-aspen-hat", title: "Aspen Hat", source: "LoveCrafts", designer: "Schachenmayr", categories: ["hats"], difficulty: "Easy", url: "https://www.lovecrafts.com/en-us/p/aspen-hat-in-schachenmayr-bravo-big-color-and-boston-style-dc1011", description: "A free chunky color-blocked hat pattern using two hook sizes." },
+  { id: "love-beach-wrap", title: "By the Beach Wrap", source: "LoveCrafts", designer: "Paintbox Yarns", categories: ["lace", "scarves", "blouses"], difficulty: "Intermediate", url: "https://www.lovecrafts.com/en-us/products/by-the-beach-wrap-free-shawl-crochet-pattern-for-women-in-paintbox-yarns-cotton-mix-dk-by-paintbox-yarns", description: "A striped, puff-stitch wrap inspired by coastal colors and worked flat." },
+  { id: "love-pardus", title: "Pardus Fair Isle Shawl", source: "LoveCrafts", designer: "Paintbox Yarns", categories: ["lace", "scarves", "blouses"], difficulty: "Intermediate", url: "https://www.lovecrafts.com/en-us/products/pardus-fair-isle-shawl-free-crochet-pattern-for-women-in-paintbox-yarns", description: "A dramatic free colorwork shawl with animal-print motifs and stripes." },
+  { id: "love-solaris", title: "Solaris Crochet Top", source: "LoveCrafts", designer: "Cassie Ward", categories: ["shirts", "blouses", "lace"], difficulty: "Intermediate", url: "https://www.lovecrafts.com/en-us/products/solaris-crochet-top-free-pattern-for-women-in-paintbox-yarns-cotton-dk", description: "A flower-motif summer top with seven sizes and bright colorwork." },
+  { id: "love-cool-shirt", title: "Cool Shirt", source: "LoveCrafts", designer: "Paintbox Yarns", categories: ["shirts", "blouses"], difficulty: "Intermediate", url: "https://www.lovecrafts.com/en-us/products/cool-shirt-free-crochet-pattern-for-women-in-paintbox-yarns-cotton-mix-dk-by-paintbox-yarns", description: "A lightweight collared shirt offered in seven inclusive chest sizes." },
+  { id: "love-kahlo", title: "Kahlo Crop Top", source: "LoveCrafts", designer: "Paintbox Yarns", categories: ["shirts", "blouses", "lace"], difficulty: "Intermediate", url: "https://www.lovecrafts.com/en-us/p/kahlo-crop-top-free-crochet-pattern-for-women-in-paintbox-yarns-cotton-dk", description: "A colorful cotton crop top assembled from graphic crochet motifs." },
+  { id: "love-seafoam", title: "Seafoam Shirt", source: "LoveCrafts", designer: "Paintbox Yarns", categories: ["shirts", "blouses", "lace"], difficulty: "Beginner", url: "https://www.lovecrafts.com/en-us/p/seafoam-shirt-free-top-crochet-pattern-for-women-in-paintbox-yarns-cotton-4-ply-by-paintbox-yarns", description: "A beginner-friendly V-neck summer shirt with sizes through a 58-inch chest." },
+  { id: "love-blooming-bomber", title: "Blooming Bomber Jacket", source: "LoveCrafts", designer: "Katie Jones", categories: ["jackets", "shirts"], difficulty: "Intermediate", url: "https://www.lovecrafts.com/en-us/products/blooming-bomber-jacket-free-crochet-pattern-for-women-in-paintbox-yarns-simply-aran", description: "A bold striped bomber with granny-square pockets and vivid color changes." },
+  { id: "love-mollie", title: "Mollie the Bunny", source: "LoveCrafts", designer: "Paintbox Yarns", categories: ["amigurumi"], difficulty: "Intermediate", url: "https://www.lovecrafts.com/en-us/products/mollie-the-bunny-free-toy-crochet-pattern-for-kids-in-paintbox-yarns-cotton-aran-by-paintbox-yarns", description: "A free 31 cm cotton bunny worked in the round and assembled as a soft toy." },
+  { id: "love-norman", title: "Norman the Sheep", source: "LoveCrafts", designer: "Paintbox Yarns", categories: ["amigurumi"], difficulty: "Intermediate", url: "https://www.lovecrafts.com/en-us/p/norman-the-sheep-free-toy-crochet-pattern-for-boys-girls-in-paintbox-yarns-cotton-aran-by-paintbox-yarns", description: "A free bobble-textured sheep toy pattern worked in the round." },
   { id: "afc-cowl", title: "Chunky Crochet Cowl", source: "AllFreeCrochet", designer: "AllFreeCrochet editors", categories: ["scarves"], difficulty: "Beginner", url: "https://www.allfreecrochet.com/pdf_download.php?id=632", description: "A thick, textured scarf-style cowl for a quick cold-weather project." },
   { id: "afc-amigurumi", title: "Free Amigurumi Pattern Library", source: "AllFreeCrochet", designer: "Multiple designers", categories: ["amigurumi"], difficulty: "All levels", url: "https://www.allfreecrochet.com/Crochet-Amigurumi-Patterns", description: "A large browsable collection of animals, characters, plants, and mini makes." },
   { id: "afc-shawls", title: "16 Crochet Shawl Patterns", source: "AllFreeCrochet", designer: "Multiple designers", categories: ["lace", "scarves", "blouses"], difficulty: "Mixed", url: "https://www.allfreecrochet.com/pdf_download.php?id=148", description: "A free collection of wearable shawls, including lacy and scalloped styles." },
@@ -635,12 +650,13 @@ async function searchAllPatternSites(term) {
 function renderCrochetStudio() {
   const allPatterns = [...crochetPatternIndex, ...liveCrochetResults.filter((live) => !crochetPatternIndex.some((item) => item.url === live.url))];
   const query = crochetQuery.trim().toLowerCase();
-  const patterns = allPatterns.filter((pattern) => {
+  const matchingPatterns = allPatterns.filter((pattern) => {
     const categoryMatch = crochetCategory === "all" || pattern.categories.includes(crochetCategory);
-    const sourceMatch = crochetSourceFilter === "all" || pattern.source === crochetSourceFilter;
     const queryMatch = !query || `${pattern.title} ${pattern.designer} ${pattern.source} ${pattern.description} ${pattern.categories.join(" ")}`.toLowerCase().includes(query);
-    return categoryMatch && sourceMatch && queryMatch;
+    return categoryMatch && queryMatch;
   });
+  const patterns = matchingPatterns.filter((pattern) => crochetSourceFilter === "all" || pattern.source === crochetSourceFilter);
+  const sourceCounts = Object.fromEntries(crochetSources.map((source) => [source.name, matchingPatterns.filter((pattern) => pattern.source === source.name).length]));
   const searchLabel = crochetQuery ? `Results for “${escapeHTML(crochetQuery)}”` : crochetCategory === "all" ? "All free patterns" : `Free ${escapeHTML(crochetCategory)} patterns`;
   const searchSection = hobbyModuleEnabled("search") ? `<section class="crochet-search-card card">
     <div><p class="card-kicker">One search · four pattern libraries</p><h2>What would you like to make?</h2><p>Search the combined Daylily index from Ravelry, Yarnspirations, LoveCrafts, and AllFreeCrochet. Every result opens its original source.</p></div>
@@ -649,10 +665,10 @@ function renderCrochetStudio() {
   </section>` : "";
   const sourcesSection = hobbyModuleEnabled("sources") ? `<section class="studio-section">
     <div class="section-heading pattern-results-heading"><div><p class="card-kicker">Combined results</p><h2>${searchLabel}</h2></div><span class="results-note">${patterns.length} results · ${crochetSearchStatus === "live" ? "Live index" : crochetSearchStatus === "loading" ? "Checking live sources…" : "Curated starter index"}</span></div>
-    <div class="source-filter-row" role="group" aria-label="Filter patterns by website"><button class="${crochetSourceFilter === "all" ? "is-active" : ""}" data-crochet-source="all" type="button">All websites</button>${crochetSources.map((source) => `<button class="${crochetSourceFilter === source.name ? "is-active" : ""}" data-crochet-source="${escapeHTML(source.name)}" type="button">${escapeHTML(source.name)}</button>`).join("")}</div>
+    <div class="source-filter-row" role="group" aria-label="Filter patterns by website"><button class="${crochetSourceFilter === "all" ? "is-active" : ""}" data-crochet-source="all" type="button">All websites <span>${matchingPatterns.length}</span></button>${crochetSources.map((source) => `<button class="${crochetSourceFilter === source.name ? "is-active" : ""}" data-crochet-source="${escapeHTML(source.name)}" type="button">${escapeHTML(source.name)} <span>${sourceCounts[source.name]}</span></button>`).join("")}</div>
     ${patterns.length ? `<div class="unified-pattern-grid">${patterns.map((pattern) => `<article class="pattern-result-card card">
       <a class="pattern-preview" href="${escapeHTML(pattern.url)}" target="_blank" rel="noopener noreferrer" aria-label="Preview ${escapeHTML(pattern.title)} on ${escapeHTML(pattern.source)}"><img data-pattern-preview src="${escapeHTML(patternPreviewURL(pattern))}" alt="Website preview for ${escapeHTML(pattern.title)}" loading="lazy" /><span>${svgIcon("external")} Website preview</span></a>
-      <div class="pattern-result-source"><span class="source-dot ${escapeHTML(pattern.source.toLowerCase().replaceAll(/[^a-z]/g, ""))}"></span>${escapeHTML(pattern.source)}<span class="free-pill">Free</span></div>
+      <div class="pattern-result-source"><span class="source-dot ${escapeHTML(pattern.source.toLowerCase().replaceAll(/[^a-z]/g, ""))}"></span><a href="${escapeHTML(pattern.url)}" target="_blank" rel="noopener noreferrer" aria-label="Cited source: ${escapeHTML(pattern.source)} original pattern page">${escapeHTML(pattern.source)}</a><span class="free-pill">Free</span></div>
       <h3>${escapeHTML(pattern.title)}</h3><p class="pattern-designer">by ${escapeHTML(pattern.designer || "Independent designer")}</p><p>${escapeHTML(pattern.description || "Free crochet pattern from the original source website.")}</p>
       <div class="tag-row">${(pattern.categories || []).slice(0, 3).map((category) => `<span class="tag">${escapeHTML(category)}</span>`).join("")}<span class="tag">${escapeHTML(pattern.difficulty || "Unrated")}</span></div>
       <div class="pattern-result-actions"><button type="button" data-save-pattern="${escapeHTML(pattern.id)}">${svgIcon("bookmark")} Save</button><a href="${escapeHTML(pattern.url)}" target="_blank" rel="noopener noreferrer">Open pattern ${svgIcon("arrow-up-right")}</a></div>
@@ -803,7 +819,183 @@ function sanitizeImportedAdminConfig(input) {
   Object.entries(allowed).forEach(([field, values]) => { if (values.includes(input.appearance?.[field])) clean.appearance[field] = input.appearance[field]; });
   clean.appearance.highContrast = input.appearance?.highContrast !== false;
   clean.appearance.motion = input.appearance?.motion !== false;
+  clean.elementStyles = {};
+  Object.entries(input.elementStyles && typeof input.elementStyles === "object" ? input.elementStyles : {}).slice(0, 300).forEach(([key, value]) => {
+    if (typeof key !== "string" || key.length > 240 || !value || typeof value !== "object") return;
+    const item = {};
+    ["background", "color", "borderColor"].forEach((field) => { if (/^#[0-9a-f]{6}$/i.test(value[field] || "")) item[field] = value[field]; });
+    if (["left", "center", "right"].includes(value.textAlign)) item.textAlign = value.textAlign;
+    if (["50%", "66%", "75%", "100%"].includes(value.width)) item.width = value.width;
+    ["offsetX", "offsetY"].forEach((field) => { if (Number.isFinite(Number(value[field]))) item[field] = Math.max(-240, Math.min(240, Number(value[field]))); });
+    if (Number.isFinite(Number(value.padding))) item.padding = Math.max(0, Math.min(100, Number(value.padding)));
+    if (Number.isFinite(Number(value.radius))) item.radius = Math.max(0, Math.min(80, Number(value.radius)));
+    if (typeof value.text === "string") item.text = value.text.slice(0, 500);
+    if (Object.keys(item).length) clean.elementStyles[key] = item;
+  });
   return clean;
+}
+
+const visualEditableSelector = [
+  '[data-view-panel]:not([data-view-panel="admin"]) .page-intro',
+  '[data-view-panel]:not([data-view-panel="admin"]) .card',
+  '[data-view-panel]:not([data-view-panel="admin"]) .studio-banner',
+  '[data-view-panel]:not([data-view-panel="admin"]) .hobby-switcher',
+  '[data-view-panel]:not([data-view-panel="admin"]) .library-toolbar',
+  '[data-view-panel]:not([data-view-panel="admin"]) article',
+  '[data-view-panel]:not([data-view-panel="admin"]) .schedule-event',
+  '[data-view-panel]:not([data-view-panel="admin"]) .planner-event',
+  '[data-view-panel]:not([data-view-panel="admin"]) h1',
+  '[data-view-panel]:not([data-view-panel="admin"]) h2',
+  '[data-view-panel]:not([data-view-panel="admin"]) h3',
+  '[data-view-panel]:not([data-view-panel="admin"]) p',
+  '[data-view-panel]:not([data-view-panel="admin"]) blockquote',
+].join(",");
+
+function visualElementKey(element) {
+  if (element.id) return `id:${element.id}`;
+  const panel = element.closest("[data-view-panel]");
+  if (!panel) return "";
+  const parts = [];
+  let current = element;
+  while (current && current !== panel) {
+    const siblings = [...current.parentElement.children];
+    parts.unshift(`${current.tagName.toLowerCase()}:${siblings.indexOf(current)}`);
+    current = current.parentElement;
+  }
+  return `${panel.dataset.viewPanel}/${parts.join("/")}`;
+}
+
+function visualCandidates() {
+  return [...document.querySelectorAll(visualEditableSelector)];
+}
+
+function tagVisualElements() {
+  document.querySelectorAll("[data-editor-key]").forEach((element) => element.removeAttribute("data-editor-key"));
+  visualCandidates().forEach((element) => {
+    const key = visualElementKey(element);
+    if (key) {
+      element.dataset.editorKey = key;
+      if (canEditElementText(element) && !element.hasAttribute("data-editor-original-text")) element.dataset.editorOriginalText = element.textContent;
+    }
+  });
+}
+
+function resetManagedElementStyles(element) {
+  ["background", "border-color", "text-align", "transform", "width", "padding", "border-radius", "--text", "--muted"].forEach((property) => element.style.removeProperty(property));
+}
+
+function applyElementOverride(element, override = {}) {
+  resetManagedElementStyles(element);
+  if (override.background) element.style.setProperty("background", override.background);
+  if (override.color) {
+    element.style.setProperty("--text", override.color);
+    element.style.setProperty("--muted", `color-mix(in srgb, ${override.color} 72%, transparent)`);
+    element.style.setProperty("color", override.color);
+  } else {
+    element.style.removeProperty("color");
+  }
+  if (override.borderColor) element.style.setProperty("border-color", override.borderColor);
+  if (override.textAlign) element.style.setProperty("text-align", override.textAlign);
+  const x = Number(override.offsetX) || 0;
+  const y = Number(override.offsetY) || 0;
+  if (x || y) element.style.setProperty("transform", `translate(${x}px, ${y}px)`);
+  if (override.width) element.style.setProperty("width", override.width);
+  if (Number.isFinite(Number(override.padding))) element.style.setProperty("padding", `${Number(override.padding)}px`);
+  if (Number.isFinite(Number(override.radius))) element.style.setProperty("border-radius", `${Number(override.radius)}px`);
+  if (canEditElementText(element)) {
+    const desiredText = typeof override.text === "string" ? override.text : element.dataset.editorOriginalText;
+    if (typeof desiredText === "string" && element.textContent !== desiredText) element.textContent = desiredText;
+  }
+}
+
+function applyVisualOverrides() {
+  tagVisualElements();
+  document.querySelectorAll(".is-editor-selected").forEach((element) => element.classList.remove("is-editor-selected"));
+  document.querySelectorAll("[data-editor-key]").forEach((element) => applyElementOverride(element, state.adminConfig.elementStyles[element.dataset.editorKey]));
+  if (selectedEditorKey) {
+    const selected = document.querySelector(`[data-editor-key="${CSS.escape(selectedEditorKey)}"]`);
+    if (selected?.closest("[data-view-panel]")?.classList.contains("is-active")) selected.classList.add("is-editor-selected");
+    else if (visualEditorActive) {
+      selectedEditorKey = "";
+      document.querySelector("#visual-inspector-form").hidden = true;
+      document.querySelector("#visual-editor-empty").hidden = false;
+    }
+  }
+}
+
+function rgbToHex(value, fallback = "#ffffff") {
+  const values = String(value).match(/[\d.]+/g)?.slice(0, 3).map(Number);
+  if (!values || values.length < 3) return fallback;
+  return `#${values.map((part) => Math.max(0, Math.min(255, Math.round(part))).toString(16).padStart(2, "0")).join("")}`;
+}
+
+function selectedVisualElement() {
+  const selected = selectedEditorKey ? document.querySelector(`[data-editor-key="${CSS.escape(selectedEditorKey)}"]`) : null;
+  return selected?.closest("[data-view-panel]")?.classList.contains("is-active") ? selected : null;
+}
+
+function canEditElementText(element) {
+  return element && element.children.length === 0 && !["INPUT", "TEXTAREA", "SELECT", "BUTTON", "A"].includes(element.tagName);
+}
+
+function populateVisualInspector(element) {
+  const override = state.adminConfig.elementStyles[selectedEditorKey] || {};
+  const computed = getComputedStyle(element);
+  const textField = document.querySelector("#visual-text-field");
+  textField.hidden = !canEditElementText(element);
+  document.querySelector("#visual-text-content").value = canEditElementText(element) ? (override.text ?? element.textContent.trim()) : "";
+  document.querySelector("#visual-text-align").value = override.textAlign || "";
+  document.querySelector("#visual-width").value = override.width || "";
+  document.querySelector("#visual-offset-x").value = Number(override.offsetX) || 0;
+  document.querySelector("#visual-offset-y").value = Number(override.offsetY) || 0;
+  document.querySelector("#visual-padding").value = Number.isFinite(Number(override.padding)) ? override.padding : "";
+  document.querySelector("#visual-radius").value = Number.isFinite(Number(override.radius)) ? override.radius : "";
+  document.querySelector("#visual-background").value = override.background || rgbToHex(computed.backgroundColor);
+  document.querySelector("#visual-text-color").value = override.color || rgbToHex(computed.color, "#282a25");
+  document.querySelector("#visual-border-color").value = override.borderColor || rgbToHex(computed.borderColor, "#d8d4cb");
+  const friendly = element.id ? `#${element.id}` : element.classList.length ? `.${[...element.classList].filter((name) => !name.startsWith("is-editor")).slice(0, 2).join(".")}` : element.tagName.toLowerCase();
+  document.querySelector("#selected-element-name").textContent = element.matches("h1,h2,h3,p,blockquote") ? `${element.tagName.toLowerCase()} text` : "Container";
+  document.querySelector("#selected-element-path").textContent = friendly;
+  document.querySelector("#visual-editor-empty").hidden = true;
+  document.querySelector("#visual-inspector-form").hidden = false;
+}
+
+function selectVisualElement(element) {
+  document.querySelectorAll(".is-editor-selected").forEach((item) => item.classList.remove("is-editor-selected"));
+  selectedEditorKey = element.dataset.editorKey;
+  element.classList.add("is-editor-selected");
+  populateVisualInspector(element);
+  document.querySelector("#visual-inspector-form").scrollTop = 0;
+  document.querySelector("#visual-editor-inspector").classList.add("is-open");
+  document.querySelector("#visual-editor-inspector").setAttribute("aria-hidden", "false");
+  document.querySelector("#visual-editor-inspector").removeAttribute("inert");
+  document.querySelector("#visual-editor-badge").hidden = true;
+}
+
+function startVisualEditor() {
+  visualEditorActive = true;
+  selectedEditorKey = "";
+  document.documentElement.dataset.visualEditor = "true";
+  applyVisualOverrides();
+  document.querySelector("#visual-editor-inspector").classList.add("is-open");
+  document.querySelector("#visual-editor-inspector").setAttribute("aria-hidden", "false");
+  document.querySelector("#visual-editor-inspector").removeAttribute("inert");
+  document.querySelector("#visual-editor-empty").hidden = false;
+  document.querySelector("#visual-inspector-form").hidden = true;
+  document.querySelector("#visual-editor-badge").hidden = true;
+  setView(state.adminConfig.homeView);
+  toast("Visual editing is on — select a container or text element");
+}
+
+function stopVisualEditor() {
+  visualEditorActive = false;
+  selectedEditorKey = "";
+  delete document.documentElement.dataset.visualEditor;
+  document.querySelectorAll(".is-editor-selected, .is-editor-hover").forEach((item) => item.classList.remove("is-editor-selected", "is-editor-hover"));
+  document.querySelector("#visual-editor-inspector").classList.remove("is-open");
+  document.querySelector("#visual-editor-inspector").setAttribute("aria-hidden", "true");
+  document.querySelector("#visual-editor-inspector").setAttribute("inert", "");
+  document.querySelector("#visual-editor-badge").hidden = true;
 }
 
 function renderAll() {
@@ -824,12 +1016,19 @@ function renderAll() {
   applyAdminConfig();
   renderAdminEditor();
   hydrateIcons();
+  applyVisualOverrides();
 }
 
 function setView(view, updateHash = true) {
   const allowedViews = [...Object.keys(adminPageMeta), "admin"];
   let validView = allowedViews.includes(view) ? view : state.adminConfig.homeView;
   if (validView !== "admin" && state.adminConfig.hiddenViews.includes(validView)) validView = state.adminConfig.order.find((key) => !state.adminConfig.hiddenViews.includes(key)) || "admin";
+  if (visualEditorActive && state.view && state.view !== validView) {
+    selectedEditorKey = "";
+    document.querySelectorAll(".is-editor-selected, .is-editor-hover").forEach((item) => item.classList.remove("is-editor-selected", "is-editor-hover"));
+    document.querySelector("#visual-inspector-form").hidden = true;
+    document.querySelector("#visual-editor-empty").hidden = false;
+  }
   state.view = validView;
   document.querySelectorAll("[data-view-panel]").forEach((panel) => panel.classList.toggle("is-active", panel.dataset.viewPanel === validView));
   document.querySelectorAll("[data-view]").forEach((button) => button.classList.toggle("is-active", button.dataset.view === validView));
@@ -838,6 +1037,7 @@ function setView(view, updateHash = true) {
   if (updateHash) history.replaceState(null, "", `#${validView}`);
   window.scrollTo({ top: 0, behavior: "smooth" });
   persist();
+  if (visualEditorActive || Object.keys(state.adminConfig.elementStyles).length) requestAnimationFrame(applyVisualOverrides);
 }
 
 function openDialog(id) {
@@ -1491,6 +1691,96 @@ document.querySelector("#admin-cozy").addEventListener("change", (event) => {
 });
 
 document.querySelector("#open-palette-from-admin").addEventListener("click", openThemeDrawer);
+
+document.querySelector("#toggle-visual-editor").addEventListener("click", startVisualEditor);
+document.querySelector("#close-visual-editor").addEventListener("click", stopVisualEditor);
+document.querySelector("#visual-editor-badge-exit").addEventListener("click", stopVisualEditor);
+document.querySelector("#visual-return-admin").addEventListener("click", () => {
+  stopVisualEditor();
+  setView("admin");
+  document.querySelector('[data-admin-section="appearance"]')?.click();
+});
+
+function updateSelectedOverride(field, value) {
+  const element = selectedVisualElement();
+  if (!element) return;
+  const override = state.adminConfig.elementStyles[selectedEditorKey] || {};
+  const empty = value === "" || value === null || value === undefined;
+  if (empty) delete override[field];
+  else override[field] = value;
+  if (Object.keys(override).length) state.adminConfig.elementStyles[selectedEditorKey] = override;
+  else delete state.adminConfig.elementStyles[selectedEditorKey];
+  applyElementOverride(element, override);
+  element.classList.add("is-editor-selected");
+  persist();
+  const status = document.querySelector("#admin-change-status");
+  if (status) status.textContent = "Element style saved locally";
+}
+
+const visualInspectorFields = {
+  "#visual-text-content": ["text", (value) => value.slice(0, 500)],
+  "#visual-text-align": ["textAlign", (value) => value],
+  "#visual-width": ["width", (value) => value],
+  "#visual-offset-x": ["offsetX", (value) => Math.max(-240, Math.min(240, Number(value) || 0))],
+  "#visual-offset-y": ["offsetY", (value) => Math.max(-240, Math.min(240, Number(value) || 0))],
+  "#visual-padding": ["padding", (value) => value === "" ? "" : Math.max(0, Math.min(100, Number(value)))],
+  "#visual-radius": ["radius", (value) => value === "" ? "" : Math.max(0, Math.min(80, Number(value)))],
+  "#visual-background": ["background", (value) => value],
+  "#visual-text-color": ["color", (value) => value],
+  "#visual-border-color": ["borderColor", (value) => value],
+};
+
+Object.entries(visualInspectorFields).forEach(([selector, [field, normalize]]) => {
+  const control = document.querySelector(selector);
+  control.addEventListener(control.matches('input[type="color"], textarea, input[type="number"]') ? "input" : "change", () => updateSelectedOverride(field, normalize(control.value)));
+});
+
+document.querySelector("#visual-inspector-form").addEventListener("click", (event) => {
+  const clear = event.target.closest("[data-clear-style]");
+  if (!clear) return;
+  updateSelectedOverride(clear.dataset.clearStyle, "");
+  const element = selectedVisualElement();
+  if (element) populateVisualInspector(element);
+});
+
+document.querySelector("#visual-reset-element").addEventListener("click", () => {
+  const element = selectedVisualElement();
+  if (!element) return;
+  delete state.adminConfig.elementStyles[selectedEditorKey];
+  applyElementOverride(element);
+  element.classList.add("is-editor-selected");
+  persist();
+  populateVisualInspector(element);
+  toast("Element restored to its inherited design");
+});
+
+document.querySelector("#visual-finish-selection").addEventListener("click", () => {
+  document.querySelectorAll(".is-editor-selected, .is-editor-hover").forEach((item) => item.classList.remove("is-editor-selected", "is-editor-hover"));
+  selectedEditorKey = "";
+  document.querySelector("#visual-inspector-form").hidden = true;
+  document.querySelector("#visual-editor-empty").hidden = false;
+});
+
+document.addEventListener("pointerover", (event) => {
+  if (!visualEditorActive || event.target.closest("#visual-editor-inspector, #visual-editor-badge, .sidebar, .topbar, .mobile-nav")) return;
+  const element = event.target.closest("[data-editor-key]");
+  document.querySelectorAll(".is-editor-hover").forEach((item) => item.classList.remove("is-editor-hover"));
+  if (element && element.dataset.editorKey !== selectedEditorKey) element.classList.add("is-editor-hover");
+}, true);
+
+document.addEventListener("click", (event) => {
+  if (!visualEditorActive || event.target.closest("#visual-editor-inspector, #visual-editor-badge, .sidebar, .topbar, .mobile-nav")) return;
+  const element = event.target.closest("[data-editor-key]");
+  if (!element) return;
+  event.preventDefault();
+  event.stopPropagation();
+  selectVisualElement(element);
+}, true);
+
+const visualMutationObserver = new MutationObserver(() => {
+  if (visualEditorActive || Object.keys(state.adminConfig.elementStyles).length) requestAnimationFrame(applyVisualOverrides);
+});
+visualMutationObserver.observe(document.querySelector(".view-wrap"), { childList: true, subtree: true });
 
 document.addEventListener("click", (event) => {
   const preview = event.target.closest("[data-preview-view]");
