@@ -3520,7 +3520,7 @@ body {
 }
 
 .week-day.is-selected {
-  background: var(--blue-dark);
+  background: var(--blue);
   color: var(--surface-strong);
   box-shadow: 0 8px 20px color-mix(in srgb, var(--blue) 23%, transparent);
 }
@@ -3618,21 +3618,7 @@ body {
 .note-tags-input { color: var(--violet-dark); }
 
 .primary-button {
-  border-color: var(--accent-dark);
-  background: var(--accent-dark);
   box-shadow: 0 8px 21px color-mix(in srgb, var(--accent) 32%, transparent);
-}
-
-html[data-theme="nightfall"] .primary-button {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: #251f1c;
-}
-
-html[data-theme="nightfall"] .primary-button:hover {
-  border-color: var(--accent-dark);
-  background: var(--accent-dark);
-  color: #251f1c;
 }
 
 .secondary-button {
